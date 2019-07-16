@@ -1,0 +1,10 @@
+id	value
+port	49188
+cd_s	0
+cd_ns	500000000
+conn_num	3
+max_retry	3
+serial_pattern	ttyUSB
+serial_rate	4800
+serial_config	8n1
+db_prog_path	config/channels.tsv

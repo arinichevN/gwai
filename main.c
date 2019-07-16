@@ -3,7 +3,6 @@
 static int app_state = APP_INIT;
 
 static TSVresult config_tsv = TSVRESULT_INITIALIZER;
-static char *db_prog_path;
 
 static Mutex db_mutex = MUTEX_INITIALIZER;
 
@@ -24,7 +23,7 @@ static ChannelList channel_list = LIST_INITIALIZER;
 #include "serialThreadStarter.c"
 #include "data.c"
 
-int readSettings ( TSVresult* r, const char *data_path, int *port, struct timespec *cd, int *conn_num, int *max_retry, int *serial_rate, char **serial_config, char **serial_pattern, char **db_prog_path ) {
+int readSettings ( TSVresult* r, const char *data_path, int *port, struct timespec *cd, int *conn_num, int *max_retry, int *serial_rate, char **serial_config, char **serial_pattern) {
     if ( !TSVinit ( r, data_path ) ) {
         return 0;
     }
@@ -36,7 +35,6 @@ int readSettings ( TSVresult* r, const char *data_path, int *port, struct timesp
     int _serial_rate = TSVgetiById ( r, "id", "value", "serial_rate" );
     char *_serial_config = TSVgetvalueById ( r, "id", "value", "serial_config" );
     char *_serial_pattern = TSVgetvalueById ( r, "id", "value", "serial_pattern" );
-    char *_db_prog_path = TSVgetvalueById ( r, "id", "value", "db_prog_path" );
     if ( TSVnullreturned ( r ) ) {
         return 0;
     }
@@ -48,7 +46,6 @@ int readSettings ( TSVresult* r, const char *data_path, int *port, struct timesp
     *serial_rate = _serial_rate;
     *serial_config = _serial_config;
     *serial_pattern = _serial_pattern;
-    *db_prog_path = _db_prog_path;
     return 1;
 }
 
@@ -124,7 +121,7 @@ void *serverThreadFunction ( void *arg ) {
 
 
 int initApp() {
-    if ( !readSettings ( &config_tsv, CONFIG_FILE, &sock_port, &serial_thread_starter.thread_cd, &conn_num, &max_retry,  &serial_thread_starter.serial_rate,  &serial_thread_starter.serial_config, &serial_thread_starter.serial_pattern, &db_prog_path) ) {
+    if ( !readSettings ( &config_tsv, CONFIG_FILE, &sock_port, &serial_thread_starter.thread_cd, &conn_num, &max_retry,  &serial_thread_starter.serial_rate,  &serial_thread_starter.serial_config, &serial_thread_starter.serial_pattern) ) {
         putsde ( "failed to read settings\n" );
         return 0;
     }
@@ -148,17 +145,10 @@ void appRun (int *state, int init_state) {
 }
 
 int initData() {
-	sqlite3 *db;
-    if ( !db_openR ( db_prog_path , &db ) ) {
-        putsde ( "failed to open DB\n" );
-        return 0;
-    }
-    if ( !initChannelList ( &channel_list, max_retry, db ) ) {
+    if ( !initChannelList ( &channel_list, max_retry, CHANNELS_CONFIG_FILE ) ) {
         freeChannelList ( &channel_list );
-        db_close ( db );
         goto failed;
     }
-    db_close ( db );
     if ( !initSerialThreadStarter ( &serial_thread_starter ) ) {
 		freeChannelList ( &channel_list );
         goto failed;

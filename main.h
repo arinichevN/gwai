@@ -3,7 +3,6 @@
 #define GWAI_H
 
 #include <dirent.h>
-#include "lib/dbl.h"
 #include "lib/util.h"
 #include "lib/app.h"
 #include "lib/timef.h"
@@ -12,7 +11,6 @@
 
 
 #include "lib/acpp/main.h"
-#include "lib/acpp/configl.h"
 #include "lib/acpp/app.h"
 #include "lib/acpp/server/common.h"
 #include "lib/acpp/server/parallel.h"
@@ -27,9 +25,10 @@
 #define CONF_DIR "/etc/controller/" APP_NAME_STR "/"
 #endif
 #ifndef MODE_FULL
-#define CONF_DIR "./"
+#define CONF_DIR "./config/"
 #endif
-#define CONFIG_FILE "" CONF_DIR "config.tsv"
+#define CONFIG_FILE "" CONF_DIR "app.tsv"
+#define CHANNELS_CONFIG_FILE "" CONF_DIR "channels.tsv"
 
 #define WAIT_RESP_TIMEOUT 1
 #define MAX_RETRY 3

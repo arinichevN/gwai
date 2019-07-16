@@ -1,4 +1,4 @@
-
+#include "../data.h"
 #define SERVER_READ if ( !acpp_read ( request, fd_conn ) ) {SERVER_GOTO_STOP}
 #define SERVER_READ_CMD char cmd[ACPP_CMD_MAX_LENGTH]; if ( !acpp_readCmd(cmd, ACPP_CMD_MAX_LENGTH, fd_conn)) {SERVER_GOTO_STOP}
 #define SERVER_GOTO_STOP goto server_stop;

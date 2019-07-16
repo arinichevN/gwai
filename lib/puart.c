@@ -89,9 +89,9 @@ int puart_sendCmd (int fd, int channel_id, char *cmd){
 	}
 	tcflush(fd,TCIOFLUSH);
 	size_t blen=64;
-	char buf[blen];
+	char buf[blen];memset(buf, 0, sizeof buf);
 	snprintf ( buf, sizeof buf, "select" PUART_DELIMITER_END_STR "%d" PUART_DELIMITER_END_STR "%s" PUART_DELIMITER_END_STR,channel_id, cmd );
-	//printdo("%s\n", buf);
+	printdo("%s\n", buf);
 	ssize_t n = write(fd, buf, strlen(buf));
     if (n < strlen(buf)) {
 		if(n==PUART_CONNECTION_FAILED){

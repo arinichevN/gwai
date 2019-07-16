@@ -53,9 +53,9 @@ void printData ( int fd ) {
     char q[LINE_SIZE*2];
     snprintf ( q, sizeof q, "CONFIG_FILE: %s\n", CONFIG_FILE );
     SEND_STR ( q )
-    snprintf ( q, sizeof q, "port: %d\n", sock_port );
+    snprintf ( q, sizeof q, "CHANNELS_CONFIG_FILE: %s\n", CHANNELS_CONFIG_FILE );
     SEND_STR ( q )
-    snprintf ( q, sizeof q, "db_prog_path: %s\n", db_prog_path );
+    snprintf ( q, sizeof q, "port: %d\n", sock_port );
     SEND_STR ( q )
     snprintf ( q, sizeof q, "conn_num: %d\n", conn_num );
     SEND_STR ( q )

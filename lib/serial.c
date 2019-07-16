@@ -9,7 +9,7 @@ int serial_init(int *fd, const char *device, const int baud, const char *config)
     return 1;
 }
 
-static int baudIntToInternal(const int baud){
+static speed_t baudIntToInternal(const int baud){
 	switch (baud) {
 		case 0:
 			return B0;
@@ -53,19 +53,61 @@ static int baudIntToInternal(const int baud){
     return -2;
 }
 
-static int dataBitsIntToInternal(const char dbits){
-	switch (dbits) {
-        case 5:
-            return CS5;
-        case 6:
-            return CS6;
-        case 7:
-            return CS7;
-        case 8:
-            return CS8;    
+static int baudInternalToInt(const speed_t baud){
+	switch (baud) {
+		case B0:
+			return 0;
+		case B50:
+             return 50;
+		case B75:
+            return 75;
+		case B110:
+            return 110;
+		case B134:
+            return 134;
+		case B150:
+            return 150;
+		case B200:
+            return 200;
+		case B300:
+            return 300;
+		case B600:
+            return 600;
+		case B1200:
+            return 1200;
+		case B1800:
+            return 1800;
+		case B2400:
+            return 2400;
+		case B4800:
+            return 4800;
+		case B9600:
+            return 9600;
+		case B19200:
+             return 19200;
+		case B38400:
+            return 38400;
+		case B57600:
+            return 57600;
+		case B115200:
+	        return 115200;
+		case B230400: 
+            return 230400;
     }
-    return -3;
+    return -2;
 }
+
+static int checkDataBits(const char dbits){
+	switch (dbits) {
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+            return 1;    
+    }
+    return 0;
+}
+
 static int checkParity(const char p){
 	switch (p) {
         case 'N':
@@ -78,6 +120,7 @@ static int checkParity(const char p){
     }
     return 0;
 }
+
 static int checkStopBits(const char sb){
 	switch (sb) {
         case '1':
@@ -86,8 +129,8 @@ static int checkStopBits(const char sb){
     }
     return 0;
 }
+
 int serial_open(const char *device, const int baud, const char *config) {
-    struct termios options;
     speed_t _baud;
     int status, fd;
 	_baud = baudIntToInternal(baud);
@@ -101,10 +144,9 @@ int serial_open(const char *device, const int baud, const char *config) {
 		putsde("bad config string");
 		return -1;
 	}
-	int _db = dataBitsIntToInternal(b);
-	if(b < 0){
+	if(!checkDataBits(b)){
 		printde("bad data bits: found %hhd, but expected one of 5,6,7,8)", b);
-		return 0;
+		return -1;
 	}
 	if(!checkParity(p)){
 		printde("bad parity: found %hhd, but expected one of N, O, E, n, o, e)", p);
@@ -122,26 +164,36 @@ int serial_open(const char *device, const int baud, const char *config) {
 
     fcntl(fd, F_SETFL, O_RDWR);
 
-    tcgetattr(fd, &options);
+	struct termios options;
+    if(tcgetattr(fd, &options) != 0){
+		close(fd);
+		perrord("tcgetattr()");
+		return -1;
+	}
 
     cfmakeraw(&options);
-    cfsetispeed(&options, _baud);
-    cfsetospeed(&options, _baud);
+    if(cfsetispeed(&options, _baud) != 0){
+		close(fd);
+		perrord("cfsetispeed()");
+		return -1;
+	}
+    if(cfsetospeed(&options, _baud) != 0){
+		close(fd);
+		perrord("cfsetospeed()");
+		return -1;
+	}
 
     options.c_cflag |= (CLOCAL | CREAD);
     //parity
     switch(p){
-		case 'N':
-        case 'n':
+		case 'N': case 'n':
 	        options.c_cflag &= ~PARENB;
 	        break;
-        case 'E':
-        case 'e':
+        case 'E': case 'e':
 	        options.c_cflag |= PARENB;
 			options.c_cflag &= ~PARODD;
 	        break;
-        case 'O':
-        case 'o':
+        case 'O': case 'o':
 	        options.c_cflag |= PARENB;
 			options.c_cflag |= PARODD;
 	        break;
@@ -163,15 +215,35 @@ int serial_open(const char *device, const int baud, const char *config) {
     }
     //data bits
     options.c_cflag &= ~CSIZE;
-    options.c_cflag |= _db;
+    switch (b) {
+        case '5':
+            options.c_cflag |= CS5;
+            break;
+        case '6':
+            options.c_cflag |= CS6;
+            break;
+        case '7':
+            options.c_cflag |= CS7;
+            break;
+        case '8':
+            options.c_cflag |= CS8;  
+            break;
+        default:
+	        options.c_cflag |= CS8;  
+	        break;  
+    }
     
     options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);//raw input
     options.c_oflag &= ~OPOST;//output options (raw output)
 
     options.c_cc [VMIN] = 1;//minimum characters to read in each read call
     options.c_cc [VTIME] = 3;//read timeout between characters as 100 ms
-
-    tcsetattr(fd, TCSANOW | TCSAFLUSH, &options);
+    
+    if(tcsetattr(fd, TCSANOW | TCSAFLUSH, &options) != 0){
+		close(fd);
+		perrord("tcsetattr()");
+		return -1;
+	}
 
     ioctl(fd, TIOCMGET, &status);
 
@@ -185,16 +257,56 @@ int serial_open(const char *device, const int baud, const char *config) {
     return fd;
 }
 
+void serial_printOptions (const int fd){
+	struct termios options;
+	int n = tcgetattr(fd, &options);
+	if(n != 0){
+		perror("tcgetattr");
+	}
+	int is = baudInternalToInt(cfgetispeed(&options));
+    int os = baudInternalToInt(cfgetospeed(&options));
+    char *stop_bits = "?";
+    if (options.c_cflag & CSTOPB){
+		stop_bits = "2";
+	}else {
+		stop_bits = "1";
+	}
+	char *data_bits = "?";
+	switch (options.c_cflag & CSIZE){
+		case CS5:
+			data_bits = "5";
+			break;
+		case CS6:
+			data_bits = "6";
+			break;
+		case CS7:
+			data_bits = "7";
+			break;
+		case CS8:
+			data_bits = "8";
+			break;
+	}
+	char *parity = "?";
+	if (options.c_cflag & PARENB){
+		if(options.c_cflag & PARODD){
+			parity = "O";
+		}else {
+			parity = "E";
+		}
+	}else{
+		parity = "N";
+	}
+	printf("in=%d out=%d %s%s%s\n",is, os, data_bits, parity, stop_bits);
+}
+
 void serial_flush(const int fd) {
     tcflush(fd, TCIOFLUSH);
 }
 
 int serial_canRead(int fd, int timeout_ms){
 	struct pollfd fds[1];
-	/* watch stdin for input */
 	fds[0].fd = fd;
 	fds[0].events = POLLIN;
-	/* All set, block! */
 	int ret = poll (fds, 2, timeout_ms);
 	if (ret == -1) {
 		perrord ("poll");
@@ -207,16 +319,14 @@ int serial_canRead(int fd, int timeout_ms){
 	if (fds[0].revents & POLLIN){
 		return 1;
 	}
-	putsde ("no data to read\n");
+	putsde ("not POLLIN\n");
 	return 0;
 }
 
 int serial_canWrite(int fd, int timeout_ms){
 	struct pollfd fds[1];
-	/* watch stdin for input */
 	fds[0].fd = fd;
 	fds[0].events = POLLOUT;
-	/* All set, block! */
 	int ret = poll (fds, 2, timeout_ms);
 	if (ret == -1) {
 		perrord ("poll");
@@ -229,6 +339,7 @@ int serial_canWrite(int fd, int timeout_ms){
 	if (fds[0].revents & POLLOUT){
 		return 1;
 	}
+    putsde("not POLLOUT");
 	return 0;
 }
 

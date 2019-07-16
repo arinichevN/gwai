@@ -10,6 +10,40 @@ static int fd=-1;
 #define PDB PUART_DELIMITER_BLOCK_STR
 #define PDE PUART_DELIMITER_END_STR
 
+
+int channelExists ( int channel_id, int fd ) {
+	printdo("Exists? id=%d\n", channel_id);
+	int r = puart_sendCmd (fd, channel_id, CMD_GET_FTS);
+	if(r == PUART_CONNECTION_FAILED){
+		puart_sendEnd(fd);
+		return PUART_CONNECTION_FAILED;
+	}
+	size_t resp_len = 128;
+	char response[resp_len];
+    memset(response, 0, resp_len);
+	r = puart_readResponse(fd, response, resp_len);
+	puart_sendEnd(fd);
+    if(r < 0){
+		printde("\tcommunication error where channel_id=%d\n", channel_id);
+		return r;
+	}
+	int id=-1;
+	int tm;
+	double input;
+	int state;
+	r = sscanf(response, "%d" PUART_DELIMITER_BLOCK_STR "%lf" PUART_DELIMITER_BLOCK_STR "%d" PUART_DELIMITER_BLOCK_STR "%d" PUART_DELIMITER_END_STR, &id, &input, &state, &tm);
+	int nr = 4;
+	if(r != nr){
+		printde("failed to parse response (found:%d, need:%d)\n", r, nr);
+		return 0;
+	}
+	if(id != channel_id){
+		printde("expected %d id but returned %d\n", channel_id, id);
+		return 0;
+	}
+	return 1;
+}
+
 int puar_sendCmd (int fd, int channel_id, char *cmd){
 	tcflush(fd,TCIOFLUSH);
 	size_t blen=64;
@@ -107,28 +141,28 @@ void appRun (int *state, int init_state) {
 		return ;
 	}
 	if(REQUEST_IS("gfts")){
-		channelGetFTSData ( channel_id, fd );
+		channelExists ( 3, fd );
 	}else if(REQUEST_IS("selected")){
 		puart_channelExist(fd, channel_id);
 	}else if(REQUEST_IS("z")){
 		puart_channelExist (fd, 3);
 		return;
 	}else if(REQUEST_IS("x")){// no soft no hard flow cntrl, 8N1 
-		serialPuts(fd, "select;3;cgfts;end;");
+		serial_puts(fd, "select;3;cgfts;end;");
 		char buf[99];memset(buf, 0, 99);
 		sleep(1);
 		GPNB
-		serialReadUntil(fd, buf, 99, ';');
+		serial_readUntil(fd, buf, 99, ';');
 		puts(buf);
 		return;
 	}else if(REQUEST_IS("c")){
 		for(int i=0;i<8;i++){
 			char req[64];
 			snprintf(req, 64, "select;%d;cgfts;", i+1);
-			serialPuts(fd, req);
+			serial_puts(fd, req);
 			delayUsIdle(300000);
 			readAB(fd);
-			serialPuts(fd, "end;");
+			serial_puts(fd, "end;");
 			delayUsIdle(300000);
 		}
 		return;
@@ -136,10 +170,10 @@ void appRun (int *state, int init_state) {
 		for(int i=0;i<8;i++){
 			char req[64];
 			snprintf(req, 64, "select;%d;cgfts;", i+1);
-			serialPuts(fd, req);
+			serial_puts(fd, req);
 			//delayUsIdle(300000);
 			readD(fd);
-			serialPuts(fd, "end;");
+			serial_puts(fd, "end;");
 			//delayUsIdle(300000);
 		}
 		return;
@@ -147,10 +181,10 @@ void appRun (int *state, int init_state) {
 		for(int i=0;i<1;i++){
 			char req[64];
 			snprintf(req, 64, "select;%d;cgfts;", i+1);
-			serialPuts(fd, req);
+			serial_puts(fd, req);
 			//delayUsIdle(300000);
 			readD(fd);
-			serialPuts(fd, "end;");
+			serial_puts(fd, "end;");
 			//delayUsIdle(300000);
 		}
 		return;
@@ -171,8 +205,9 @@ int startSerial(int *fdp){
 	}
 	int id = 0;
 	int rate = 0;
-	int n = fscanf(fl, "%d\t%d", &id, &rate);
-	if(n!=2){
+    char config[4];config[3]='\0';
+	int n = fscanf(fl, "%d\t%d\t%3s", &id, &rate, config);
+	if(n!=3){
 		putsde("failed to read config file");
 		return 0;
 	}
@@ -183,11 +218,12 @@ int startSerial(int *fdp){
 	char sp[LINE_SIZE];
 	memset(sp, 0, sizeof sp);
 	snprintf(sp, LINE_SIZE, "/dev/ttyUSB%d", id);
-	if (!initSerial(fdp, sp, rate)) {
+	if (!serial_init(fdp, sp, rate, config)) {
         putsde("failed to initialize serial\n");
         return 0;
     }
-    printf("connected to %s at %d rate", sp, rate);
+    printf("connected to %s at %d rate and config %s\n", sp, rate, config);
+    serial_printOptions(*fdp);
     return 1;
 }
 

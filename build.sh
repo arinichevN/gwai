@@ -32,8 +32,8 @@ function move_bin_dbg {
 function move_conf {
 	([ -d $CONF_DIR ] || mkdir $CONF_DIR) && \
 	([ -d $CONF_DIR_APP ] || mkdir $CONF_DIR_APP) && \
-	cp  config.tsv $CONF_DIR_APP && \
-	cp  ./db/data.db $CONF_DIR_APP && \
+	cp  ./config/app.tsv $CONF_DIR_APP && \
+	cp  ./config/channels.tsv $CONF_DIR_APP && \
 	chmod -R a+rw $CONF_DIR_APP
 	echo "Your $APP configuration files are here: $CONF_DIR_APP";
 }
@@ -49,23 +49,17 @@ function conf_autostart {
 
 function build_lib {
 	gcc $1  -c app.c -D_REENTRANT $DEBUG_PARAM  && \
-	gcc $1  -c dbl.c -D_REENTRANT $DEBUG_PARAM  && \
 	gcc $1  -c timef.c -D_REENTRANT $DEBUG_PARAM  && \
 	gcc $1  -c tsv.c -D_REENTRANT $DEBUG_PARAM  && \
 	gcc  $1 -c serial.c -D_REENTRANT $DEBUG_PARAM  && \
 	gcc  $1 -c puart.c -D_REENTRANT $DEBUG_PARAM  && \
-	if [ ! -f sqlite3.o ]; then
-		echo "building sqlite..."
-	    gcc $1 -DSQLITE_THREADSAFE=2 -DSQLITE_OMIT_LOAD_EXTENSION  -c sqlite3.c -D_REENTRANT $DEBUG_PARAM 
-    fi
 	cd acpp && \
 	gcc  $1   -c main.c -D_REENTRANT $DEBUG_PARAM  && \
-	gcc $1  -c configl.c -D_REENTRANT $DEBUG_PARAM  && \
 	gcc $1  -c server/parallel.c -D_REENTRANT $DEBUG_PARAM  && \
 	cd ../ && \
 	echo "library: making archive..." && \
 	rm -f libpac.a
-	ar -crv libpac.a app.o dbl.o timef.o tsv.o sqlite3.o serial.o puart.o  acpp/main.o acpp/configl.o acpp/parallel.o && echo "library: done"
+	ar -crv libpac.a app.o timef.o tsv.o serial.o puart.o  acpp/main.o  acpp/parallel.o && echo "library: done"
 }
 
 #    1         2
@@ -74,7 +68,7 @@ function build {
 	cd lib && \
 	build_lib $1 && \ 
 	cd ../ 
-	gcc -D_REENTRANT -DSQLITE_THREADSAFE=2 -DSQLITE_OMIT_LOAD_EXTENSION $1 $3  main.c -o $2 $DEBUG_PARAM -lpthread -L./lib -lpac && echo "Application successfully compiled. Launch command: sudo ./"$2
+	gcc -D_REENTRANT $1 $3  main.c -o $2 $DEBUG_PARAM -lpthread -L./lib -lpac && echo "Application successfully compiled. Launch command: sudo ./"$2
 }
 
 
@@ -104,6 +98,25 @@ function uninstall {
 	uninstall_nc
 	update-rc.d -f $APP remove
 	rm -rf $CONF_DIR_APP
+}
+#test
+function build_lib_st {
+	gcc $1  -c app.c -D_REENTRANT $DEBUG_PARAM  && \
+	gcc $1  -c timef.c -D_REENTRANT $DEBUG_PARAM  && \
+	gcc $1  -c serial.c -D_REENTRANT $DEBUG_PARAM  && \
+	gcc $1  -c puart.c -D_REENTRANT $DEBUG_PARAM  && \
+	echo "library: making archive..." && \
+	rm -f libpacst.a
+	ar -crv libpacst.a app.o timef.o serial.o puart.o && echo "libpacst: done" 
+}
+function build_st {
+	cd lib && \
+	build_lib_st $1 && \
+	cd ../ 
+	gcc -D_REENTRANT $1 $3 test/puart/main.c -o srl $DEBUG_PARAM -pthread -L./lib -lpacst && echo "Application successfully compiled. Launch command: sudo ./srl"
+}
+function puart_test {
+	build_st $MODE_DEBUG $APP_DBG $NONE
 }
 f=$1
 ${f}

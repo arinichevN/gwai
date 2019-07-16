@@ -21,6 +21,8 @@ extern int serial_open(const char *device, const int baud, const char *config);
 
 extern int serial_init(int *fd, const char *device, const int baud, const char *config);
 
+extern void serial_printOptions (const int fd);
+
 extern int serial_puts(const int fd, char *str);
 
 extern int serial_canRead(int fd, int timeout_ms);
