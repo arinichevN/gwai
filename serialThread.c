@@ -101,7 +101,7 @@ int channelExists ( int channel_id, int fd ) {
 	int tm;
 	double input;
 	int state;
-	r = sscanf(response, "%d" PUART_DELIMITER_BLOCK_STR "%lf" PUART_DELIMITER_BLOCK_STR "%d" PUART_DELIMITER_BLOCK_STR "%d" PUART_DELIMITER_END_STR, &id, &input, &state, &tm);
+	r = sscanf(response, "%d" PUART_DELIMITER_BLOCK_STR "%lf" PUART_DELIMITER_BLOCK_STR "%d" PUART_DELIMITER_BLOCK_STR "%d" PUART_DELIMITER_END_STR, &id, &input, &tm, &state );
 	int nr = 4;
 	if(r != nr){
 		printde("failed to parse response (found:%d, need:%d)\n", r, nr);

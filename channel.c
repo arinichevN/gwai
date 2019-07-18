@@ -26,7 +26,7 @@ int channelGetFTSData ( RunData *item, int channel_id, int fd ) {
 	int id=-1;
 	lockMutex(&item->mutex);
 	int tm;
-	r = sscanf(response, "%d" PDB FV PDB "%d" PDB "%d" PDE, &id, &item->input, &item->input_state, &tm);
+	r = sscanf(response, "%d" PDB FV PDB "%d" PDB "%d" PDE, &id, &item->input, &tm, &item->input_state );
 	int nr = 4;
 	if(r != nr){
 		printde("read fts: failed to parse response (found:%d, need:%d)\n", r, nr);
