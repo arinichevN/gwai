@@ -5,4 +5,5 @@
 /*.kdev4
 /*.o
 /lib/*.o
-
+/srl
+/gwai*

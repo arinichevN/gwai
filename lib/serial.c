@@ -236,7 +236,7 @@ int serial_open(const char *device, const int baud, const char *config) {
     options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);//raw input
     options.c_oflag &= ~OPOST;//output options (raw output)
 
-    options.c_cc [VMIN] = 1;//minimum characters to read in each read call
+    options.c_cc [VMIN] = 0;//minimum characters to read in each read call
     options.c_cc [VTIME] = 3;//read timeout between characters as 100 ms
     
     if(tcsetattr(fd, TCSANOW | TCSAFLUSH, &options) != 0){

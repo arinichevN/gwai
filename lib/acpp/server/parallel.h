@@ -1,12 +1,13 @@
+#include "common.h"
 
-
-#define SERVERM_STOP server_stop:close(connection->fd_conn);connection->state=SERVERM_IDLE;unlockMutex(&connection->mutex);
+#define SERVERM_STOP server_stop:close(connection->fd);connection->state=SERVERM_IDLE;unlockMutex(&connection->mutex);
 
 
 typedef struct {
 	int id;
 	int state;
-	int fd_conn;
+	int fd;
+	void ( *serveFunction ) ( int, const char * );
 	pthread_t thread;
 	Mutex mutex;
 }ServermConn;
@@ -17,7 +18,7 @@ enum serverm_state{
 	SERVERM_BUSY
 };
 
-extern int serverm_init(int *fd, int port,  int conn_num, ServermConnList *list,  void * ( *thread_routine ) ( void * )) ;
+extern int serverm_init(int *fd, int port,  int conn_num, ServermConnList *list,  void ( *serveFunc ) ( int, const char * )) ;
 
 extern void serverm_accept ( int fd, ServermConnList *list );
 

@@ -49,74 +49,46 @@ int readSettings ( TSVresult* r, const char *data_path, int *port, struct timesp
     return 1;
 }
 
-
-void *serverThreadFunction ( void *arg ) {
-    ServermConn *connection = arg;
-    printf ( "hello from server thread %d\n", connection->id );
-    fflush ( stdout );
-    while ( 1 ) {
-        switch ( connection->state ) {
-        case SERVERM_IDLE:
-            nanosleep ( &(struct timespec) {0,10000000}, NULL );
-            break;
-        case SERVERM_BUSY:{
-			//printdo("SERVERM_BUSY %d\n", connection->id);
-         //   puts ( "\n\n" );
-         //   printf ( "connection is busy %d\n", connection->id );
-            lockMutex ( &connection->mutex ) ;
-            int fd_conn = connection->fd_conn;
-            SERVER_READ_CMD
-            //printf("command: %s\n", cmd);
-            if ( CMD_IS ( ACPP_CMD_CHANNEL_GET_FTS ) ) {
-				SERVER_READ_I1LIST(channel_list.max_length)
-				SERVER_RESPONSE_DEF_FTSLIST(channel_list.max_length)
-				
-		        FORLISTN ( i1l, i ) {
-					Channel *item = NULL;
-					LIST_GETBYID(item, &channel_list, i1l.item[i])
-					if(item!=NULL){
-						if(item->thread == NULL){
-						//	printdo("skipping channel with no thread: %d\n", item->id);
-							continue;
-						}
-						lockMutex(&item->run.mutex);
-						double v=item->run.input;
-						struct timespec tm = item->run.input_tm;
-						int success = item->run.input_state;
-						unlockMutex(&item->run.mutex);
-						SERVER_RESPONSE_FTSLIST_PUSH(item->id, v, tm, success)
-					}
+void serveRequest(int SERVER_FD, const char *SERVER_CMD){
+	if ( CMD_IS ( ACPP_CMD_CHANNEL_GET_FTS ) ) {
+		SERVER_READ_I1LIST(channel_list.max_length)
+		SERVER_RESPONSE_DEF_FTSLIST(channel_list.max_length)
+		
+        FORLISTN ( i1l, i ) {
+			Channel *item = NULL;
+			LIST_GETBYID(item, &channel_list, i1l.item[i])
+			if(item!=NULL){
+				if(item->thread == NULL){
+				//	printdo("skipping channel with no thread: %d\n", item->id);
+					continue;
 				}
-				//printdo("fts list l: %d\n", ftslr.length);
-		        SERVER_RESPONSE_FTSLIST_SEND
-		        SERVER_GOTO_STOP
-		    } else if ( CMD_IS ( ACPP_CMD_APP_PRINT ) ) {
-		        printData ( fd_conn );
-		        SERVER_GOTO_STOP
-		    } else if ( CMD_IS ( ACPP_CMD_CHANNEL_RESET ) ) {
-				SERVER_READ_I1LIST(channel_list.max_length)
-		        FORLISTN ( i1l, i ) {
-					Channel *item = NULL;
-					LIST_GETBYID(item, &channel_list, i1l.item[i])
-					if(item!=NULL){
-						if ( lockMutex ( &item->mutex ) ) {
-		                    item->state = INIT;
-		                    unlockMutex ( &item->mutex );
-		                }
-					}
-				}
-				SERVER_GOTO_STOP
-		    } else {
-		        putsde ( "unknow command\n" );
-		    }
-            SERVERM_STOP
-            break;}
-        default:
-            pthread_exit ( NULL );
-            break;
-        }
+				lockMutex(&item->run.mutex);
+				double v=item->run.input;
+				struct timespec tm = item->run.input_tm;
+				int success = item->run.input_state;
+				unlockMutex(&item->run.mutex);
+				SERVER_RESPONSE_FTSLIST_PUSH(item->id, v, tm, success)
+			}
+		}
+		//printdo("fts list l: %d\n", ftslr.length);
+        SERVER_RESPONSE_FTSLIST_SEND
+    } else if ( CMD_IS ( ACPP_CMD_APP_PRINT ) ) {
+        printData ( SERVER_FD );
+    } else if ( CMD_IS ( ACPP_CMD_CHANNEL_RESET ) ) {
+		SERVER_READ_I1LIST(channel_list.max_length)
+        FORLISTN ( i1l, i ) {
+			Channel *item = NULL;
+			LIST_GETBYID(item, &channel_list, i1l.item[i])
+			if(item!=NULL){
+				if ( lockMutex ( &item->mutex ) ) {
+                    item->state = INIT;
+                    unlockMutex ( &item->mutex );
+                }
+			}
+		}
+    } else {
+        putsde ( "unknow command\n" );
     }
-
 }
 
 
@@ -133,7 +105,7 @@ int initApp() {
         putsde ( "failed to initialize serial_thread_list mutex\n" );
         return 0;
     }
-    if ( !serverm_init(&server_fd, sock_port, conn_num, &sc_list, serverThreadFunction)){
+    if ( !serverm_init(&server_fd, sock_port, conn_num, &sc_list, serveRequest)){
 		putsde ( "failed to initialize multythreaded server\n" );
         return 0;
 	 }
