@@ -29,7 +29,7 @@ void delayTsBusyFifo ( struct timespec interval ) {
 void delayUsBusy ( unsigned int td ) {
     struct timespec now, interval, end;
     clock_gettime ( CLOCK_MONOTONIC, &now );
-    usec2timespec ( td, &interval )
+    usec2timespec ( &interval, td  )
     timespecadd ( &now, &interval, &end );
     while ( timespeccmp ( &now, &end, < ) ) {
         clock_gettime ( CLOCK_MONOTONIC, &now );
@@ -48,7 +48,7 @@ void delayUsBusyC ( unsigned int td ) {
 
 void delayUsIdle ( unsigned int td ) {
     struct timespec requested;
-    usec2timespec ( td, &requested )
+    usec2timespec ( &requested, td  )
     nanosleep ( &requested, NULL );
 }
 
@@ -287,3 +287,4 @@ void changeInt ( int *v, int inc ) {
         *v = *v + inc;
     }
 }
+

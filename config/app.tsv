@@ -7,4 +7,3 @@ max_retry	3
 serial_pattern	ttyUSB
 serial_rate	4800
 serial_config	8n1
-db_prog_path	config/channels.tsv

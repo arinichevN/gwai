@@ -9,17 +9,14 @@
 #include "lib/tsv.h"
 #include "lib/puart.h"
 
-
 #include "lib/acpp/main.h"
 #include "lib/acpp/app.h"
 #include "lib/acpp/server/common.h"
 #include "lib/acpp/server/parallel.h"
 #include "lib/acpp/cmd/main.h"
 
-
 #define APP_NAME gwai
 #define APP_NAME_STR TOSTRING(APP_NAME)
-
 
 #ifdef MODE_FULL
 #define CONF_DIR "/etc/controller/" APP_NAME_STR "/"
@@ -28,23 +25,42 @@
 #define CONF_DIR "./config/"
 #endif
 #define CONFIG_FILE "" CONF_DIR "app.tsv"
-#define CHANNELS_CONFIG_FILE "" CONF_DIR "channels.tsv"
+#define CHANNELS_CONFIG_FILE "" CONF_DIR "channel/items.tsv"
+#define CHANNELS_GET_FILE "" CONF_DIR "channel/interface/get.tsv"
+#define CHANNELS_SET_FILE "" CONF_DIR "channel/interface/set.tsv"
 
 #define WAIT_RESP_TIMEOUT 1
 #define MAX_RETRY 3
-#define SOUND_QUEUE_LENGTH 8
+#define SLAVE_CMD_MAX_LENGTH 16
+#define SLAVE_CMD_MAX_SIZE (SLAVE_CMD_MAX_LENGTH * sizeof(char))
+#define SLAVE_TYPE_MAX_LENGTH 16
 #define STATE_STR_ONLINE "online"
 #define STATE_STR_OFFLINE "offline"
 
-
 #define STATUS_SUCCESS "SUCCESS"
 #define STATUS_FAILURE "FAILURE"
-
 
 #define TREG_GOOD_STATE 16
 #define TREG_BAD_STATE 8
 
 #define CONNECTION_ERROR PUART_CONNECTION_FAILED
+
+#define SLAVE_DATA_BUFFER_LENGTH 128
+
+#define CMD_SLAVE_CHANNEL_GET_DATA_BY_CMD "scgdbc"
+#define CMD_SLAVE_CHANNEL_SET_INT "scsi"
+#define CMD_SLAVE_CHANNEL_SET_DOUBLE "scsd"
+
+#define SLAVE_TYPE_FTS_STR "fts"
+#define SLAVE_TYPE_INT_STR "int"
+#define SLAVE_TYPE_DOUBLE_STR "float"
+
+typedef enum {
+    SLAVE_TYPE_FTS, 
+    SLAVE_TYPE_INT, 
+    SLAVE_TYPE_DOUBLE,
+    SLAVE_TYPE_UNKNOWN
+} SlaveDTypeE;
 
 typedef enum {
    OFF,
@@ -80,26 +96,48 @@ typedef enum {
 	FAILURE_RACK_MEM,
 	FAILURE_HIVE_COUNT,
 } Fail;
-//data from slave
+
 typedef struct {
-	double input;
-	int input_state;
-	int input_stm;
-	struct timespec input_tm;
-	
-	struct timespec interval;
-	
-	struct timespec tm;
-	Ton tmr;
-	int state;
-	Mutex mutex;
-} RunData;
+    double value;
+    struct timespec tm;
+    int state;
+}SFTS;
+
+typedef union {
+    SFTS fts;
+    int intg;
+    double dbl;
+} SlaveDType;
+
+typedef struct {
+    SlaveDType data;
+    int ( *readFunction ) ( int, int, char*, Mutex *, SlaveDType * );
+    void ( *sendFunction ) ( int, int, Mutex *, SlaveDType * );
+    char cmd[SLAVE_CMD_MAX_LENGTH];
+    SlaveDTypeE data_type;
+    struct timespec interval;
+    
+    Mutex mutex;
+    Ton tmr;
+    int result;
+    int state;
+} SlaveDataItem;
+DEC_LIST(SlaveDataItem)
+
+typedef struct {
+    int ( *setFunction ) ( int, int, Mutex *, char *, void * );
+    char cmd[SLAVE_CMD_MAX_LENGTH];
+    SlaveDTypeE data_type;
+} SlaveSetItem;
+DEC_LIST(SlaveSetItem)
+
 
 typedef struct sthread_st SerialThread;
 
 typedef struct {
    int id;
-   RunData run;
+   SlaveDataItemList data_list;
+   SlaveSetItemList set_list;
    SerialThread *thread;
    int max_retry;
    int retry;
@@ -140,9 +178,9 @@ DEC_LLIST(SerialThread)
 typedef struct {
 	DIR *dfd;
 	char *dir;
-	char *serial_pattern;
+	char serial_pattern[LINE_SIZE];
 	int serial_rate;
-	char *serial_config;
+	char serial_config[LINE_SIZE];
 	struct timespec thread_cd;
 	
 	int state;

@@ -27,9 +27,12 @@
 
 #define timespec2double(d, ts) d=(ts)->tv_sec + (double) (ts)->tv_nsec*NANO_FACTOR
 #define double2timespec(ts, d)  (ts)->tv_sec = d; (ts)->tv_nsec = ( d - (long int ) d ) / NANO_FACTOR;
-#define usec2timespec(us, ts)             \
+#define usec2timespec(ts, us)             \
   (ts)->tv_sec = (time_t) (us / 1000000);            \
   (ts)->tv_nsec = (long) (us % 1000000) * 1000;
+#define msec2timespec(ts, ms)             \
+  (ts)->tv_sec = (time_t) (ms / 1000);            \
+  (ts)->tv_nsec = (long) (ms % 1000) * 1000000;
 
 #define timespeccmp(a, b, CMP)             \
   (((a)->tv_sec == (b)->tv_sec) ?            \

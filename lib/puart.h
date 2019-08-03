@@ -27,13 +27,13 @@
 
 extern int puart_readResponse(int fd, char *buf, int len);
 
-extern int puart_sendDouble(int fd, int channel_id, char *cmd, double v);
+extern int puart_sendDouble(int fd, int channel_id, const char *cmd, double v);
 
-extern int puart_sendInt(int fd, int channel_id, char *cmd, int v);
+extern int puart_sendInt(int fd, int channel_id, const char *cmd, int v);
 
-extern int puart_sendStr(int fd, int channel_id, char *cmd, char *v);
+extern int puart_sendStr(int fd, int channel_id, const char *cmd, char *v);
 
-extern int puart_sendCmd (int fd, int channel_id, char *cmd);
+extern int puart_sendCmd (int fd, int channel_id, const char *cmd);
 
 extern int puart_channelExist (int fd, int channel_id);
 

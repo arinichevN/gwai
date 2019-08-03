@@ -49,17 +49,18 @@ function conf_autostart {
 
 function build_lib {
 	gcc $1  -c app.c -D_REENTRANT $DEBUG_PARAM  && \
+	gcc $1 -c util.c -D_REENTRANT $DEBUG_PARAM  && \
 	gcc $1  -c timef.c -D_REENTRANT $DEBUG_PARAM  && \
 	gcc $1  -c tsv.c -D_REENTRANT $DEBUG_PARAM  && \
-	gcc  $1 -c serial.c -D_REENTRANT $DEBUG_PARAM  && \
-	gcc  $1 -c puart.c -D_REENTRANT $DEBUG_PARAM  && \
+	gcc $1 -c serial.c -D_REENTRANT $DEBUG_PARAM  && \
+	gcc $1 -c puart.c -D_REENTRANT $DEBUG_PARAM  && \
 	cd acpp && \
-	gcc  $1   -c main.c -D_REENTRANT $DEBUG_PARAM  && \
-	gcc $1  -c server/parallel.c -D_REENTRANT $DEBUG_PARAM  && \
+	gcc     -c main.c -D_REENTRANT $DEBUG_PARAM  && \
+	gcc   -c server/parallel.c -D_REENTRANT $DEBUG_PARAM  && \
 	cd ../ && \
 	echo "library: making archive..." && \
 	rm -f libpac.a
-	ar -crv libpac.a app.o timef.o tsv.o serial.o puart.o  acpp/main.o  acpp/parallel.o && echo "library: done"
+	ar -crv libpac.a app.o util.o timef.o tsv.o serial.o puart.o  acpp/main.o  acpp/parallel.o && echo "library: done"
 }
 
 #    1         2

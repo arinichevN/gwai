@@ -2,6 +2,8 @@
 #define SERVER_CMD cmd
 #define SERVER_FD fd
 
+#define SERVER_SEND_END acpp_send(ACPP_DELIMITER_END_STR, SERVER_FD);
+
 #define SERVER_READ_CMD char SERVER_CMD[ACPP_CMD_MAX_LENGTH]; if ( !acpp_readCmd(SERVER_CMD, ACPP_CMD_MAX_LENGTH, SERVER_FD)) {SERVER_GOTO_STOP}
 #define SERVER_GOTO_STOP goto server_stop;
 

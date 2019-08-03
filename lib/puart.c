@@ -29,8 +29,7 @@ int puart_readResponse(int fd, char *buf, int len){
 }
 
 
-int puart_sendDouble(int fd, int channel_id, char *cmd, double v){
-	tcflush(fd,TCIOFLUSH);
+int puart_sendDouble(int fd, int channel_id, const char *cmd, double v){
 	size_t blen=64;
 	char buf[blen];
 	snprintf ( buf, sizeof buf, "select" PUART_DELIMITER_END_STR "%d" PUART_DELIMITER_END_STR "%s" PUART_DELIMITER_END_STR "%f" PUART_DELIMITER_END_STR,channel_id, cmd, v );
@@ -47,8 +46,7 @@ int puart_sendDouble(int fd, int channel_id, char *cmd, double v){
     return PUART_SUCCESS;
 }
 
-int puart_sendInt(int fd, int channel_id, char *cmd, int v){
-	tcflush(fd,TCIOFLUSH);
+int puart_sendInt(int fd, int channel_id, const char *cmd, int v){
 	size_t blen=64;
 	char buf[blen];
 	snprintf ( buf, sizeof buf, "select" PUART_DELIMITER_END_STR "%d" PUART_DELIMITER_END_STR "%s" PUART_DELIMITER_END_STR "%d" PUART_DELIMITER_END_STR,channel_id, cmd, v );
@@ -65,7 +63,7 @@ int puart_sendInt(int fd, int channel_id, char *cmd, int v){
     return PUART_SUCCESS;
 }
 
-int puart_sendStr(int fd, int channel_id, char *cmd, char *v){
+int puart_sendStr(int fd, int channel_id, const char *cmd, char *v){
 	//tcflush(fd,TCIOFLUSH);
 	size_t blen=64;
 	char buf[blen];
@@ -83,7 +81,7 @@ int puart_sendStr(int fd, int channel_id, char *cmd, char *v){
     return PUART_SUCCESS;
 }
 
-int puart_sendCmd (int fd, int channel_id, char *cmd){
+int puart_sendCmd (int fd, int channel_id, const char *cmd){
 	if(!serial_canWrite(fd, PUART_TIMEOUT_MS)){
 		putsde("failed to read slave response\n");
 		return PUART_CONNECTION_FAILED;

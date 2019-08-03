@@ -225,4 +225,5 @@ void freeSerialThreadStarter(SerialThreadStarter *item){
 	STOP_THREAD(item->thread);
 	closedir(item->dfd);
 	item->dfd = NULL;
+	
 }

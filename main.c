@@ -2,15 +2,12 @@
 
 static int app_state = APP_INIT;
 
-static TSVresult config_tsv = TSVRESULT_INITIALIZER;
-
 static Mutex db_mutex = MUTEX_INITIALIZER;
 
 static int sock_port = -1;
-static int server_fd = -1;
 static int conn_num = 0;
 static int max_retry;
-static ServermConnList sc_list = LIST_INITIALIZER;
+static Serverm server;
 
 static Mutex serial_thread_list_mutex = MUTEX_INITIALIZER;
 static SerialThreadStarter serial_thread_starter;
@@ -23,8 +20,9 @@ static ChannelList channel_list = LIST_INITIALIZER;
 #include "serialThreadStarter.c"
 #include "data.c"
 
-int readSettings ( TSVresult* r, const char *data_path, int *port, struct timespec *cd, int *conn_num, int *max_retry, int *serial_rate, char **serial_config, char **serial_pattern) {
-    if ( !TSVinit ( r, data_path ) ) {
+int readSettings ( const char *data_path, int *port, struct timespec *cd, int *conn_num, int *max_retry, int *serial_rate, char *serial_config, char *serial_pattern) {
+    TSVresult *r = NULL;
+    if ( !TSVinit ( &r, data_path ) ) {
         return 0;
     }
     int _port = TSVgetiById ( r, "id", "value", "port" );
@@ -36,6 +34,7 @@ int readSettings ( TSVresult* r, const char *data_path, int *port, struct timesp
     char *_serial_config = TSVgetvalueById ( r, "id", "value", "serial_config" );
     char *_serial_pattern = TSVgetvalueById ( r, "id", "value", "serial_pattern" );
     if ( TSVnullreturned ( r ) ) {
+		TSVclear ( r );
         return 0;
     }
     *port = _port;
@@ -44,56 +43,97 @@ int readSettings ( TSVresult* r, const char *data_path, int *port, struct timesp
     *conn_num = _conn_num;
     *max_retry = _max_retry;
     *serial_rate = _serial_rate;
-    *serial_config = _serial_config;
-    *serial_pattern = _serial_pattern;
+    strncpy(serial_config, _serial_config, LINE_SIZE);
+    strncpy(serial_pattern, _serial_pattern, LINE_SIZE);
+    TSVclear ( r );
     return 1;
 }
 
 void serveRequest(int SERVER_FD, const char *SERVER_CMD){
-	if ( CMD_IS ( ACPP_CMD_CHANNEL_GET_FTS ) ) {
-		SERVER_READ_I1LIST(channel_list.max_length)
-		SERVER_RESPONSE_DEF_FTSLIST(channel_list.max_length)
-		
+    if(channelListHasGetCmd(&channel_list, SERVER_CMD)){
+        SERVER_READ_I1LIST(channel_list.max_length)
         FORLISTN ( i1l, i ) {
-			Channel *item = NULL;
-			LIST_GETBYID(item, &channel_list, i1l.item[i])
-			if(item!=NULL){
-				if(item->thread == NULL){
-				//	printdo("skipping channel with no thread: %d\n", item->id);
-					continue;
-				}
-				lockMutex(&item->run.mutex);
-				double v=item->run.input;
-				struct timespec tm = item->run.input_tm;
-				int success = item->run.input_state;
-				unlockMutex(&item->run.mutex);
-				SERVER_RESPONSE_FTSLIST_PUSH(item->id, v, tm, success)
-			}
-		}
-		//printdo("fts list l: %d\n", ftslr.length);
-        SERVER_RESPONSE_FTSLIST_SEND
-    } else if ( CMD_IS ( ACPP_CMD_APP_PRINT ) ) {
-        printData ( SERVER_FD );
-    } else if ( CMD_IS ( ACPP_CMD_CHANNEL_RESET ) ) {
-		SERVER_READ_I1LIST(channel_list.max_length)
-        FORLISTN ( i1l, i ) {
-			Channel *item = NULL;
-			LIST_GETBYID(item, &channel_list, i1l.item[i])
-			if(item!=NULL){
-				if ( lockMutex ( &item->mutex ) ) {
-                    item->state = INIT;
-                    unlockMutex ( &item->mutex );
+			Channel *channel = NULL;
+			LIST_GETBYID(channel, &channel_list, i1l.item[i])
+			if(channel!=NULL){
+				FORLISTN(channel->data_list, j){
+                    SlaveDataItem *item = &channel->data_list.item[j];
+                    if(strncmp(SERVER_CMD, item->cmd, SLAVE_CMD_MAX_SIZE) == 0){
+                        if(item->result && item->sendFunction!=NULL){
+                            item->sendFunction(SERVER_FD, channel->id, &item->mutex, &item->data);
+                        }
+                    }
                 }
 			}
 		}
-    } else {
-        putsde ( "unknow command\n" );
+        SERVER_SEND_END
+        return;
+    }
+    if(channelListHasSetCmd(&channel_list, SERVER_CMD)){
+		SERVER_READ_I1S1LIST(channel_list.max_length)
+		FORLISTN ( i1s1l, i ) {
+			Channel *channel = NULL;
+			LIST_GETBYID(channel, &channel_list, i1s1l.item[i].p0)
+			if(channel!=NULL && channel->thread != NULL){
+				FORLISTN(channel->set_list, j){
+                    SlaveSetItem *item = &channel->set_list.item[j];
+                    if(strncmp(SERVER_CMD, item->cmd, SLAVE_CMD_MAX_SIZE) == 0 && item->setFunction!=NULL){
+                        switch(item->data_type){
+							case SLAVE_TYPE_INT:
+								{int v = atoi(i1s1l.item[i].p1);
+								item->setFunction(channel->id, channel->thread->fd, &channel->thread->mutex, item->cmd, (void *) &v);
+								break;}
+							case SLAVE_TYPE_DOUBLE:
+								{double v = atof(i1s1l.item[i].p1);printdo("FOUTND float command %s %f\n", item->cmd, v);
+								if(!checkFloat(v)) break;
+	                            item->setFunction(channel->id, channel->thread->fd, &channel->thread->mutex, item->cmd, (void *) &v);
+	                            break;}
+	                        default:
+		                        break;
+                        }
+                    }
+                }
+			}
+		}
+		return;
+	}
+    if ( CMD_IS ( ACPP_CMD_APP_PRINT ) ) {
+        printData ( SERVER_FD );
+    } else if ( CMD_IS ( ACPP_CMD_APP_RESET ) ) {
+		app_state = APP_RESET;
+    } else if ( CMD_IS ( ACPP_CMD_CHANNEL_RESET ) ) {
+		SERVER_READ_I1LIST(channel_list.max_length)
+        FORLISTN ( i1l, i ) {
+			Channel *channel = NULL;
+			LIST_GETBYID(channel, &channel_list, i1l.item[i])
+			if(channel!=NULL){
+				if ( lockMutex ( &channel->mutex ) ) {
+					channel->state = INIT;
+                    unlockMutex ( &channel->mutex );
+                }
+			}
+		}
+    } else {//get-command for raw output
+        SERVER_READ_I1LIST(channel_list.max_length)
+        FORLISTN ( i1l, i ) {
+			Channel *channel = NULL;
+			LIST_GETBYID(channel, &channel_list, i1l.item[i])
+			if(channel!=NULL && channel->thread!=NULL){
+				printdo("RAW get command: %s\n", SERVER_CMD);
+				char buf[SLAVE_DATA_BUFFER_LENGTH];
+                channelSlaveGetRaw(channel, SERVER_CMD, buf, SLAVE_DATA_BUFFER_LENGTH);
+                channelSendRawData (SERVER_FD,  channel->id, buf, SLAVE_DATA_BUFFER_LENGTH );
+                
+			}
+		}
+		SERVER_SEND_END
+		return;
     }
 }
 
 
 int initApp() {
-    if ( !readSettings ( &config_tsv, CONFIG_FILE, &sock_port, &serial_thread_starter.thread_cd, &conn_num, &max_retry,  &serial_thread_starter.serial_rate,  &serial_thread_starter.serial_config, &serial_thread_starter.serial_pattern) ) {
+    if ( !readSettings ( CONFIG_FILE, &sock_port, &serial_thread_starter.thread_cd, &conn_num, &max_retry,  &serial_thread_starter.serial_rate,  serial_thread_starter.serial_config, serial_thread_starter.serial_pattern) ) {
         putsde ( "failed to read settings\n" );
         return 0;
     }
@@ -105,19 +145,16 @@ int initApp() {
         putsde ( "failed to initialize serial_thread_list mutex\n" );
         return 0;
     }
-    if ( !serverm_init(&server_fd, sock_port, conn_num, &sc_list, serveRequest)){
+    if ( !serverm_init(&server, sock_port, conn_num, serveRequest)){
 		putsde ( "failed to initialize multythreaded server\n" );
         return 0;
 	 }
     return 1;
 }
 
-void appRun (int *state, int init_state) {
-	serverm_accept ( server_fd, &sc_list );
-}
 
 int initData() {
-    if ( !initChannelList ( &channel_list, max_retry, CHANNELS_CONFIG_FILE ) ) {
+    if ( !initChannelList ( &channel_list, max_retry, CHANNELS_CONFIG_FILE,  CHANNELS_GET_FILE, CHANNELS_SET_FILE) ) {
         freeChannelList ( &channel_list );
         goto failed;
     }
@@ -131,17 +168,16 @@ failed:
 }
 
 void freeData() {
-	serverm_free(server_fd, &sc_list);
+	serverm_free(&server);
 	STOP_ALL_LLIST_THREADS(&serial_thread_list, SerialThread)
+	freeChannelList ( &channel_list );
 	freeThreadList ( &serial_thread_list );
 	freeSerialThreadStarter(&serial_thread_starter);
 }
 
 void freeApp() {
-    close ( server_fd );
     freeData();
     freeMutex ( &serial_thread_list_mutex );
-    TSVclear ( &config_tsv );
 }
 
 void exit_nicely ( ) {
@@ -155,14 +191,11 @@ int main ( int argc, char** argv ) {
     daemon ( 0, 0 );
 #endif
     conSig ( &exit_nicely );
-    int data_initialized = 0;
     while ( 1 ) {
-#ifdef MODE_DEBUG
-     //   printf ( "%s(): %s %d\n", F, getAppState ( app_state ), data_initialized );
-#endif
+       // printdo ( "%s(): %s\n", F, getAppState ( app_state ) );
         switch ( app_state ) {
         case APP_RUN:
-            appRun ( &app_state, data_initialized );
+            sched_yield();
             break;
         case APP_INIT:
             if ( !initApp() ) {
@@ -171,19 +204,17 @@ int main ( int argc, char** argv ) {
             app_state = APP_INIT_DATA;
             break;
         case APP_INIT_DATA:
-            data_initialized = initData();
+            initData();
             app_state = APP_RUN;
             delayUsIdle ( 1000000 );
             break;
         case APP_STOP:
             freeData();
-            data_initialized = 0;
             app_state = APP_RUN;
             break;
         case APP_RESET:
             freeApp();
             delayUsIdle ( 1000000 );
-            data_initialized = 0;
             app_state = APP_INIT;
             break;
         case APP_EXIT:

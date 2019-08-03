@@ -18,9 +18,7 @@ typedef struct {
     int null_returned;
 } TSVresult;
 
-#define TSVRESULT_INITIALIZER {.buf = NULL, .column_name = NULL, .data = NULL, .buf_length = 0, .column_name_length = 0, .data_length = 0, .null_returned=0}
-
-extern int TSVinit(TSVresult *r, const char *path);
+extern int TSVinit(TSVresult **r, const char *path);
 
 extern int TSVntuples(TSVresult *r) ;
 

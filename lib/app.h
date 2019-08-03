@@ -91,9 +91,9 @@
 #endif
 
 #ifdef MODE_DEBUG
-#define STOP_ALL_LLIST_THREADS(list, T) {FOREACH_LLIST(item,(list),T){printf("signaling thread %d to cancel...\n", item->id);if (pthread_cancel(item->thread) != 0) perror("pthread_cancel()");}FOREACH_LLIST(item,list,T){void * App_result;printf("joining thread %d...\n", item->id);if (pthread_join(item->thread, &App_result) != 0) perror("pthread_join()");if (App_result != PTHREAD_CANCELED) printf("thread %d not canceled\n", item->id);}}
+#define STOP_ALL_LLIST_THREADS(list, T) {FOREACH_LLIST(item,(list),T){printf("signaling thread %d to cancel...\n", item->id);while (pthread_cancel(item->thread) != 0){;}}FOREACH_LLIST(item,list,T){void * App_result;printf("joining thread %d...\n", item->id);if (pthread_join(item->thread, &App_result) != 0) perror("pthread_join()");if (App_result != PTHREAD_CANCELED) printf("thread %d not canceled\n", item->id);}}
 #else
-#define STOP_ALL_LLIST_THREADS(list, T) {FOREACH_LLIST(item,(list),T){pthread_cancel(item->thread);}FOREACH_LLIST(item,list,T){void * App_result;pthread_join(item->thread, &App_result);}}
+#define STOP_ALL_LLIST_THREADS(list, T) {FOREACH_LLIST(item,(list),T){while(pthread_cancel(item->thread)!=0){;}}FOREACH_LLIST(item,list,T){void * App_result;pthread_join(item->thread, &App_result);}}
 #endif
 #define STOP_ALL_CHANNEL_THREADS(channel_list) STOP_ALL_LLIST_THREADS(channel_list, Channel)
 

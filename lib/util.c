@@ -87,6 +87,11 @@ double adifd(double v1, double v2) {
     return 0.0;
 }
 
+int checkFloat (double v) {
+	if(isinf(v)) return 0;
+	if(isnan(v)) return 0;
+	return 1;
+}
 /*
 check if values are approximately equal
  */

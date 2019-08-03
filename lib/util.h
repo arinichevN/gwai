@@ -10,6 +10,7 @@
 #include <limits.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <math.h>
 
 #include "common.h"
 
@@ -20,6 +21,8 @@ extern void strnline(char **v) ;
 extern char * bufCat(char * buf, const char * str, size_t size);
 
 extern char * estostr(char *s);
+
+extern int checkFloat (double v) ;
 
 extern double adifd(double v1, double v2) ;
 

@@ -151,7 +151,16 @@ static int TSVcheck ( TSVresult *r ) {
     return 1;
 }
 
-int TSVinit ( TSVresult *r, const char *path ) {
+int TSVinit (TSVresult **item, const char *path ) {
+    TSVresult *r = malloc ( sizeof (TSVresult) );
+    if ( r == NULL ) {
+#ifdef MODE_DEBUG
+        fprintf ( stderr, "%s(): %s: failed to allocate memory for tsv: ", F, path );
+        perror ( "" );
+#endif
+        return 0;
+    }
+    r->buf = NULL, r->column_name = NULL, r->data = NULL, r->buf_length = 0, r->column_name_length = 0, r->data_length = 0, r->null_returned=0;
     FILE* stream = fopen ( path, "r" );
     if ( stream == NULL ) {
 #ifdef MODE_DEBUG
@@ -228,6 +237,7 @@ int TSVinit ( TSVresult *r, const char *path ) {
 #endif
         return 0;
     }
+    *item = r;
     return 1;
 }
 
@@ -341,14 +351,9 @@ int TSVnullreturned ( TSVresult *r ) {
     return r->null_returned;
 }
 void TSVclear ( TSVresult *r ) {
+	if(r==NULL) return;
     free ( r->buf );
-    r->buf = NULL;
-    r->buf_length = 0;
     free ( r->column_name );
-    r->column_name = NULL;
-    r->column_name_length = 0;
     free ( r->data );
-    r->data = NULL;
-    r->data_length = 0;
-    r->null_returned=0;
+    free ( r );
 }

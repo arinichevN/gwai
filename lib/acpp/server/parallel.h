@@ -13,13 +13,17 @@ typedef struct {
 }ServermConn;
 DEC_LIST(ServermConn)
 
+typedef struct {
+	ServermConnList connection_list;
+	int fd;
+	pthread_t thread;
+} Serverm;
+
 enum serverm_state{
 	SERVERM_IDLE,
 	SERVERM_BUSY
 };
 
-extern int serverm_init(int *fd, int port,  int conn_num, ServermConnList *list,  void ( *serveFunc ) ( int, const char * )) ;
+extern int serverm_init(Serverm *item, int port,  int conn_num, void ( *serveFunc ) ( int, const char * )) ;
 
-extern void serverm_accept ( int fd, ServermConnList *list );
-
-extern void serverm_free ( int fd, ServermConnList *list );
+extern void serverm_free ( Serverm *item );

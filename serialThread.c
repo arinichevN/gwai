@@ -28,12 +28,12 @@ void threadReset(SerialThread *item){
 	}
 	LLIST_RESET(&item->channelptr_llist);
 	item->state = TERMINATED;
-	printdo("T %d TERMINATED\n", item->id);
+	//printdo("T %d TERMINATED\n", item->id);
 }
 
 int addChannelPtr ( ChannelPtr *item, ChannelPtrLList *list, ChannelPtrList *source  ) {
     if ( list->length >= source->length ) {
-        printde ( "can not add channelptr with id=%d - list length exceeded\n", item->item->id );
+       // printde ( "can not add channelptr with id=%d - list length exceeded\n", item->item->id );
         return 0;
     }
     item->next = NULL;
@@ -44,7 +44,7 @@ int addChannelPtr ( ChannelPtr *item, ChannelPtrLList *list, ChannelPtrList *sou
     }
     list->last = item;
     list->length++;
-    printdo ( "channelptr with id=%d has been ADDED to control list\n", item->item->id );
+    //printdo ( "channelptr with id=%d has been ADDED to control list\n", item->item->id );
     return 1;
 }
 
@@ -64,7 +64,7 @@ ChannelPtr * deleteChannelPtr ( ChannelPtr *item, ChannelPtrLList *list ) {
             lockMutex(&curr->item->mutex);
             curr->item->thread = NULL;
             unlockMutex(&curr->item->mutex);
-            printdo ( "channelptr with id=%d has been DELETED from control list\n", item->item->id );
+          //  printdo ( "channelptr with id=%d has been DELETED from control list\n", item->item->id );
             return curr;
         }
         prev = curr;
@@ -83,7 +83,7 @@ int assignChannelToThread(ChannelPtr *item, SerialThread *thread){
 
 int channelExists ( int channel_id, int fd ) {
 	printdo("Exists? id=%d\n", channel_id);
-	int r = puart_sendCmd (fd, channel_id, CMD_GET_FTS);
+	int r = puart_sendCmd (fd, channel_id, "gfts");
 	if(r == PUART_CONNECTION_FAILED){
 		puart_sendEnd(fd);
 		return PUART_CONNECTION_FAILED;
@@ -181,7 +181,7 @@ void threadControl(SerialThread *item){
             }
             puts("");
 			break;}
-		case FIND_CHANNELS:printdo("T %d FIND_CHANNELS\n", item->id);
+		case FIND_CHANNELS://printdo("T %d FIND_CHANNELS\n", item->id);
 			FORLISTN(channel_list, i){
 				Channel *channel = &channel_list.item[i];
 				lockMutex(&channel->mutex);
