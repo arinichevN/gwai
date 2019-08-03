@@ -195,7 +195,7 @@ int main ( int argc, char** argv ) {
        // printdo ( "%s(): %s\n", F, getAppState ( app_state ) );
         switch ( app_state ) {
         case APP_RUN:
-            sched_yield();
+            nanosleep ( &(struct timespec) {0,10000000}, NULL );
             break;
         case APP_INIT:
             if ( !initApp() ) {
