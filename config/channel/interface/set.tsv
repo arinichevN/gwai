@@ -1,9 +1,11 @@
-channel_id	cmd	data_type
-1	scpwmdc	int
-1	scpwmp	int
-1	scpwmr	int
-1	scpwmdcmin	int
-1	scpwmdcmax	int
-1	scpwmsdc	int
-1	scpwmstm	int
-1	scpwmss	int
+channel_id	cmd		data_type
+1		scpwmdc		int
+1		scpwmp		int
+1		scpwmr		int
+1		scpwmdcmin	int
+1		scpwmdcmax	int
+1		scpwmsdc	int
+1		scpwmstm	int
+1		scpwmss		int
+
+

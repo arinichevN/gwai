@@ -6,6 +6,8 @@
 #include <string.h>
 #include "common.h"
 
+#define TSV_DELIMITER_COLUMN '\t'
+#define TSV_DELIMITER_ROW '\n'
 #define TSV_SKIP_LINE(S) while (1) {int x = fgetc(S);if (x == EOF || x == '\n') { break; }    }
 
 typedef struct {

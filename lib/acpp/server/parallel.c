@@ -34,7 +34,7 @@ void *serverm_connThreadFunction ( void *arg ) {
     while ( 1 ) {
         switch ( connection->state ) {
         case SERVERM_IDLE:
-            nanosleep ( &(struct timespec) {0,10000000}, NULL );
+            NANOSLEEP(0,10000000);
             break;
         case SERVERM_BUSY:{
 			//printdo("SERVERM_BUSY %d\n", connection->id);

@@ -83,7 +83,7 @@ int assignChannelToThread(ChannelPtr *item, SerialThread *thread){
 
 int channelExists ( int channel_id, int fd ) {
 	printdo("Exists? id=%d\n", channel_id);
-	int r = puart_sendCmd (fd, channel_id, "gfts");
+	int r = puart_sendCmd (fd, channel_id, CMD_CHANNEL_EXISTS);
 	if(r == PUART_CONNECTION_FAILED){
 		puart_sendEnd(fd);
 		return PUART_CONNECTION_FAILED;
@@ -91,6 +91,7 @@ int channelExists ( int channel_id, int fd ) {
 	size_t resp_len = 128;
 	char response[resp_len];
     memset(response, 0, resp_len);
+    SLEEP_BEFORE_READ_SLAVE
 	r = puart_readResponse(fd, response, resp_len);
 	puart_sendEnd(fd);
     if(r < 0){

@@ -58,7 +58,7 @@ int setSetCmdByType(const char *dtype, SlaveSetItem *item){
     }
     return 1;
 }
-int initChannelPoll(TSVresult *db, int channel_id, SlaveDataItemList *list ){printf("init poll %d\n", channel_id);
+int initChannelPoll(TSVresult *db, int channel_id, SlaveDataItemList *list ){
     RESET_LIST ( list )
     if(db == NULL){
         return 1;
@@ -76,6 +76,7 @@ int initChannelPoll(TSVresult *db, int channel_id, SlaveDataItemList *list ){pri
         return 0;
     }
     if(n <= 0 ){
+		printdo("no slave poll commands for channel_id=%d\n", channel_id);
         return 1;
     }
     ALLOC_LIST ( list,n );
@@ -84,7 +85,7 @@ int initChannelPoll(TSVresult *db, int channel_id, SlaveDataItemList *list ){pri
         putsde ( "failed to allocate memory for channel poll list\n" );
         return 0;
     }
-    for(int i = 0; i<nt; i++){
+    for(int i = 0; i<nt; i++) {
 	    int v = TSVgetis ( db, i, "channel_id" );
 	    if(v == channel_id){
 			if(LL >= LML) break;
@@ -102,24 +103,25 @@ int initChannelPoll(TSVresult *db, int channel_id, SlaveDataItemList *list ){pri
                 printde("channel poll file: bad interval where channel_id = %d\n", channel_id);
                 return 0;
             }
-            LIi.interval.tv_sec = is;
-            LIi.interval.tv_nsec = ins;
-            strncpy(LIi.cmd, cmd, SLAVE_CMD_MAX_SIZE);
-            if(!setDataByType(data_type, &LIi)){
+            LIll.interval.tv_sec = is;
+            LIll.interval.tv_nsec = ins;
+            strncpy(LIll.cmd, cmd, SLAVE_CMD_MAX_SIZE);
+            if(!setDataByType(data_type, &LIll)){
                 FREE_LIST(list);
                 printde("   at row %d\n", i);
                 return 0;
             }
-            if ( !initMutex ( &LIi.mutex ) ) {
+            if ( !initMutex ( &LIll.mutex ) ) {
                 FREE_LIST ( list );
                 putsde ( "failed to initialize slave data mutex\n" );
                 return 0;
             }
+            LIll.state = INIT;
             LL++;
             //printf("init poll LL++\n");
         }
     }
-    printf("poll LL=%d\n",LL);
+    //printf("poll LL=%d\n",LL);
     return 1;
 }
 
@@ -141,6 +143,7 @@ int initChannelSetCmd(TSVresult *db, int channel_id, SlaveSetItemList *list ){
         return 0;
     }
     if(n <= 0 ){
+		printdo("no slave set commands for channel_id=%d\n", channel_id);
         return 1;
     }
     ALLOC_LIST ( list,n )
@@ -160,8 +163,8 @@ int initChannelSetCmd(TSVresult *db, int channel_id, SlaveSetItemList *list ){
                 putsde("null returned while reading channel_poll file 2\n");
                 return 0;
             }
-            strncpy(LIi.cmd, cmd, SLAVE_CMD_MAX_SIZE);
-            if(!setSetCmdByType(data_type, &LIi)){
+            strncpy(LIll.cmd, cmd, SLAVE_CMD_MAX_SIZE);
+            if(!setSetCmdByType(data_type, &LIll)){
                 FREE_LIST(list);
                 printde("   at row %d\n", i);
                 return 0;

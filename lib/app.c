@@ -164,7 +164,7 @@ void freeMutex ( Mutex *m ) {
         }
         break;
     default:
-        fprintf ( stderr, "%s(): unknown state", __func__ );
+        fprintf ( stderr, "%s(): unknown state\n", __func__ );
         break;
     }
 

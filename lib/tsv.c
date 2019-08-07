@@ -16,18 +16,16 @@ static int getBufLength ( FILE* stream ) {
 static int getColumnNameLength ( FILE* stream ) {
     rewind ( stream );
     int out = 0;
+    int last_char = TSV_DELIMITER_COLUMN;
     while ( 1 ) {
         int c = fgetc ( stream );
-        if ( c == EOF ) {
+        if ( c == EOF || c == TSV_DELIMITER_ROW) {
             break;
         }
-        if ( c == '\n' ) {
-            out++;
-            break;
-        }
-        if ( c == '\t' ) {
+        if ( c != TSV_DELIMITER_COLUMN && c != TSV_DELIMITER_ROW && last_char == TSV_DELIMITER_COLUMN) {
             out++;
         }
+        last_char = c;
     }
     return out;
 }
@@ -36,14 +34,16 @@ static int getDataLength ( FILE* stream ) {
     rewind ( stream );
     TSV_SKIP_LINE ( stream )
     int out = 0;
+    int last_char = TSV_DELIMITER_COLUMN;
     while ( 1 ) {
         int c = fgetc ( stream );
         if ( c == EOF ) {
             break;
         }
-        if ( c == '\t' || c == '\n' ) {
+        if ( c != TSV_DELIMITER_COLUMN && c != TSV_DELIMITER_ROW && (last_char == TSV_DELIMITER_COLUMN || last_char == TSV_DELIMITER_ROW)) {
             out++;
         }
+        last_char = c;
     }
     return out;
 }
@@ -62,7 +62,7 @@ static void parse ( TSVresult *r, FILE* stream ) {
     int state = 0;
     int i = 0;
     int j = 0;
-    int set = 1;
+    int last_char = TSV_DELIMITER_COLUMN;
     while ( 1 ) {
         int c = fgetc ( stream );
         if ( c == EOF ) {
@@ -71,7 +71,7 @@ static void parse ( TSVresult *r, FILE* stream ) {
         if ( i >= r->buf_length ) {
             return;
         }
-        if ( c == '\n' || c == '\t' ) {
+        if ( c == TSV_DELIMITER_ROW || c == TSV_DELIMITER_COLUMN ) {
             r->buf[i] = '\0';
         } else {
             r->buf[i] = c;
@@ -79,48 +79,26 @@ static void parse ( TSVresult *r, FILE* stream ) {
 
         switch ( state ) {
         case 0://header
-            if ( c == '\n' ) {
+            if ( c == TSV_DELIMITER_ROW ) {
                 j = 0;
-                set = 1;
                 state = 1;
                 break;
             }
-            if ( c == '\t' ) {
-                if ( set ) {
-                    if ( j < r->column_name_length ) {
-                        j++;
-                    }
-                    set = 0;
-                }
-                set = 1;
+            if ( c != TSV_DELIMITER_COLUMN && c != TSV_DELIMITER_ROW && last_char == TSV_DELIMITER_COLUMN ) {
+				if ( j < r->column_name_length ) {
+					r->column_name[j] = &r->buf[i];
+					j++;
+				}
                 break;
             }
-            if ( set ) {
-                if ( j < r->column_name_length ) {
-                    r->column_name[j] = &r->buf[i];
-                    j++;
-                }
-                set = 0;
-            }
-
             break;
         case 1://data row
-            if ( c == '\t' || c == '\n' ) {
-                if ( set ) {
-                    if ( j < r->data_length ) {
-                        j++;
-                    }
-                    set = 0;
-                }
-                set = 1;
+            if ( c != TSV_DELIMITER_COLUMN && c != TSV_DELIMITER_ROW && (last_char == TSV_DELIMITER_COLUMN || last_char == TSV_DELIMITER_ROW) ) {
+				if ( j < r->data_length ) {
+					r->data[j] = &r->buf[i];
+					j++;
+				}
                 break;
-            }
-            if ( set ) {
-                if ( j < r->data_length ) {
-                    r->data[j] = &r->buf[i];
-                    j++;
-                }
-                set = 0;
             }
             break;
         default:
@@ -129,7 +107,7 @@ static void parse ( TSVresult *r, FILE* stream ) {
 #endif
             break;
         }
-
+		last_char = c;
         i++;
     }
 }

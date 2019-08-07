@@ -24,6 +24,7 @@
 #define DELAY_US_BUSY(interval) delayTsBusy ( (struct timespec) {0,interval*1000} )
 #define DELAY_US_BUSY_FIFO(interval) delayTsBusyFifo ( (struct timespec) {0,interval*1000} )
 #define DELAY_US_IDLE(interval) delayTsIdle ( (struct timespec) {0,interval*1000} )
+#define NANOSLEEP(s, ns) nanosleep( &(struct timespec) {s,ns}, NULL )
 
 #define timespec2double(d, ts) d=(ts)->tv_sec + (double) (ts)->tv_nsec*NANO_FACTOR
 #define double2timespec(ts, d)  (ts)->tv_sec = d; (ts)->tv_nsec = ( d - (long int ) d ) / NANO_FACTOR;

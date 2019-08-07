@@ -1,6 +1,6 @@
 #include "main.h"
 
-#define CMD_GET_FTS "cgfts"
+
 
 #define FV "%lf"
 #define PDB PUART_DELIMITER_BLOCK_STR
@@ -38,6 +38,7 @@ int channelSlaveGetFTSData (int fd, int channel_id, char *cmd,  Mutex *mutex, Sl
 	}
 	char response[SLAVE_DATA_BUFFER_LENGTH];
     memset(response, 0, SLAVE_DATA_BUFFER_LENGTH);
+    SLEEP_BEFORE_READ_SLAVE
 	r = puart_readResponse(fd, response, SLAVE_DATA_BUFFER_LENGTH);
 	puart_sendEnd(fd);
     if(r < 0){
@@ -77,6 +78,7 @@ int channelSlaveGetRaw (Channel *channel, const char *cmd,  char *data, int len 
 		return PUART_CONNECTION_FAILED;
 	}
     memset(data, 0, len * sizeof (*data));
+    SLEEP_BEFORE_READ_SLAVE
 	r = puart_readResponse(fd, data, len);
 	puart_sendEnd(fd);
 	unlockMutex(mutex);

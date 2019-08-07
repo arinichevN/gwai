@@ -47,6 +47,7 @@
 
 #define SLAVE_DATA_BUFFER_LENGTH 128
 
+#define SLEEP_BEFORE_READ_SLAVE NANOSLEEP(0,100000000);
 #define CMD_SLAVE_CHANNEL_GET_DATA_BY_CMD "scgdbc"
 #define CMD_SLAVE_CHANNEL_SET_INT "scsi"
 #define CMD_SLAVE_CHANNEL_SET_DOUBLE "scsd"
@@ -54,6 +55,8 @@
 #define SLAVE_TYPE_FTS_STR "fts"
 #define SLAVE_TYPE_INT_STR "int"
 #define SLAVE_TYPE_DOUBLE_STR "float"
+
+#define CMD_CHANNEL_EXISTS "cgfts"
 
 typedef enum {
     SLAVE_TYPE_FTS, 

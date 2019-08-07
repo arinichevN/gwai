@@ -1,7 +1,7 @@
-id	value
-port	49188
-cd_s	0
-cd_ns	500000000
+id		value
+port		49188
+cd_s		0
+cd_ns		500000000
 conn_num	3
 max_retry	3
 serial_pattern	ttyUSB
