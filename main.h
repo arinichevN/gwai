@@ -56,7 +56,7 @@
 #define SLAVE_TYPE_INT_STR "int"
 #define SLAVE_TYPE_DOUBLE_STR "float"
 
-#define CMD_CHANNEL_EXISTS "cgfts"
+#define CMD_CHANNEL_EXISTS "gfts"
 
 typedef enum {
     SLAVE_TYPE_FTS, 

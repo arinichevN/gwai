@@ -90,11 +90,69 @@ int channelSlaveGetRaw (Channel *channel, const char *cmd,  char *data, int len 
 }
 
 int channelSlaveGetIntData (int fd,  int channel_id, char *cmd, Mutex *mutex, SlaveDType *data ) {
-    return 1;
+    int r = puart_sendCmd (fd, channel_id, cmd);
+	if(r == PUART_CONNECTION_FAILED){
+		puart_sendEnd(fd);
+		return PUART_CONNECTION_FAILED;
+	}
+	char response[SLAVE_DATA_BUFFER_LENGTH];
+    memset(response, 0, SLAVE_DATA_BUFFER_LENGTH);
+    SLEEP_BEFORE_READ_SLAVE
+	r = puart_readResponse(fd, response, SLAVE_DATA_BUFFER_LENGTH);
+	puart_sendEnd(fd);
+    if(r < 0){
+		printde("\tcommunication error where channel_id=%d\n", channel_id);
+		return r;
+	}
+	int id=-1;
+    int value;
+	r = sscanf(response, "%d" PDB "%d" PDE, &id, &value);
+	int nr = 2;
+	if(r != nr){
+		printde("read fts: failed to parse response (found:%d, need:%d)\n", r, nr);
+		return 0;
+	}
+    if(id != channel_id){
+		printde("read fts: expected %d id but returned %d\n", channel_id, id);
+		return 0;
+	}
+    lockMutex(mutex);
+    data->intg = value;
+	unlockMutex(mutex);
+	return 1;
 }
 
 int channelSlaveGetFloatData (int fd,  int channel_id, char *cmd, Mutex *mutex, SlaveDType *data ) {
-    return 1;
+    int r = puart_sendCmd (fd, channel_id, cmd);
+	if(r == PUART_CONNECTION_FAILED){
+		puart_sendEnd(fd);
+		return PUART_CONNECTION_FAILED;
+	}
+	char response[SLAVE_DATA_BUFFER_LENGTH];
+    memset(response, 0, SLAVE_DATA_BUFFER_LENGTH);
+    SLEEP_BEFORE_READ_SLAVE
+	r = puart_readResponse(fd, response, SLAVE_DATA_BUFFER_LENGTH);
+	puart_sendEnd(fd);
+    if(r < 0){
+		printde("\tcommunication error where channel_id=%d\n", channel_id);
+		return r;
+	}
+	int id=-1;
+    double value;
+	r = sscanf(response, "%d" PDB FV PDE, &id, &value);
+	int nr = 2;
+	if(r != nr){
+		printde("read fts: failed to parse response (found:%d, need:%d)\n", r, nr);
+		return 0;
+	}
+    if(id != channel_id){
+		printde("read fts: expected %d id but returned %d\n", channel_id, id);
+		return 0;
+	}
+    lockMutex(mutex);
+    data->dbl = value;
+	unlockMutex(mutex);
+	return 1;
 }
 
 int channelSlaveSetFloatData (int channel_id, int fd, Mutex *mutex, char *cmd,  void *data ) {

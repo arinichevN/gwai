@@ -141,6 +141,10 @@ int startSerialThread(int fd, struct timespec cd, char *filename, int rate, int 
     
 }
 
+void prepPort(int fd){
+    for(int i=0;i<5;i++){char *cmd = "end;";write(fd, cmd, strlen(cmd));};
+    NANOSLEEP(0,100000000);
+}
 void serialThreadStartControl(SerialThreadStarter *item){
 	switch(item->state){
 		case SEARCH_NEED://putsdo("TS SEARCH_NEED\n");
@@ -164,6 +168,7 @@ void serialThreadStartControl(SerialThreadStarter *item){
 					        continue;
 					    }
 					    printdo("TS starting thread for port: %s\n", filename);
+                        prepPort(fd);
 					    startSerialThread(fd, item->thread_cd, filename, item->serial_rate, max_retry, &channel_list, &serial_thread_list, &serial_thread_list_mutex);
 					}else{
 						//putsdo("TS we have already thread for this file\n");
