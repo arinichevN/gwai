@@ -145,6 +145,8 @@ void prepPort(int fd){
     for(int i=0;i<5;i++){char *cmd = "end;";write(fd, cmd, strlen(cmd));};
     NANOSLEEP(0,100000000);
 }
+
+
 void serialThreadStartControl(SerialThreadStarter *item){
 	switch(item->state){
 		case SEARCH_NEED://putsdo("TS SEARCH_NEED\n");

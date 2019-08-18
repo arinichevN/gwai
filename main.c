@@ -50,6 +50,7 @@ int readSettings ( const char *data_path, int *port, struct timespec *cd, int *c
 }
 
 void serveRequest(int SERVER_FD, const char *SERVER_CMD){
+	printdo("command %s\n", SERVER_CMD);
     if(channelListHasGetCmd(&channel_list, SERVER_CMD)){
         SERVER_READ_I1LIST(channel_list.max_length)
         FORLISTN ( i1l, i ) {
@@ -80,7 +81,7 @@ void serveRequest(int SERVER_FD, const char *SERVER_CMD){
                     if(strncmp(SERVER_CMD, item->cmd, SLAVE_CMD_MAX_SIZE) == 0 && item->setFunction!=NULL){
                         switch(item->data_type){
 							case SLAVE_TYPE_INT:
-								{int v = atoi(i1s1l.item[i].p1);
+								{int v = atoi(i1s1l.item[i].p1);printdo("FOUTND int command %s %d\n", item->cmd, v);
 								item->setFunction(channel->id, channel->thread->fd, &channel->thread->mutex, item->cmd, (void *) &v);
 								break;}
 							case SLAVE_TYPE_DOUBLE:
@@ -114,6 +115,7 @@ void serveRequest(int SERVER_FD, const char *SERVER_CMD){
 			}
 		}
     } else {//get-command for raw output
+		printdo("try to parse RAW get command: %s\n", SERVER_CMD);
         SERVER_READ_I1LIST(channel_list.max_length)
         FORLISTN ( i1l, i ) {
 			Channel *channel = NULL;
