@@ -32,8 +32,7 @@ function move_bin_dbg {
 function move_conf {
 	([ -d $CONF_DIR ] || mkdir $CONF_DIR) && \
 	([ -d $CONF_DIR_APP ] || mkdir $CONF_DIR_APP) && \
-	cp  ./config/app.tsv $CONF_DIR_APP && \
-	cp  ./config/channels.tsv $CONF_DIR_APP && \
+	cp -r ./config $CONF_DIR_APP && \
 	chmod -R a+rw $CONF_DIR_APP
 	echo "Your $APP configuration files are here: $CONF_DIR_APP";
 }

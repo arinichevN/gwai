@@ -182,11 +182,11 @@ int channelSlaveSetIntData (int channel_id, int fd, Mutex *mutex, char *cmd, voi
 }
 
 void channelSendFloatData (int fd,  int channel_id, Mutex *mutex, SlaveDType *data ) {
-    char q[ACPP_ROW_MAX_LENGTH];
-    lockMutex(mutex);
-    snprintf ( q, sizeof q, "%d" ACPP_DELIMITER_COLUMN_STR ACPP_FLOAT_FORMAT_OUT ACPP_DELIMITER_ROW_STR, channel_id, data->dbl );
-    unlockMutex(mutex);
-    acpp_send ( q, fd );
+	char q[ACPP_ROW_MAX_LENGTH];
+	lockMutex(mutex);
+	snprintf ( q, sizeof q, "%d" ACPP_DELIMITER_COLUMN_STR ACPP_FLOAT_FORMAT_OUT ACPP_DELIMITER_ROW_STR, channel_id, data->dbl );
+	unlockMutex(mutex);
+	acpp_send ( q, fd );
 }
 
 void channelSendIntData (int fd,  int channel_id, Mutex *mutex, SlaveDType *data ) {

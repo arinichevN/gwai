@@ -58,162 +58,172 @@ int setSetCmdByType(const char *dtype, SlaveSetItem *item){
     }
     return 1;
 }
-int initChannelPoll(char *file_name, int channel_id, SlaveDataItemList *list ){
-	RESET_LIST ( list )
-	char path[LINE_SIZE];
-	path[0] = '\0';
-	strncat(path, CHANNELS_GET_DIR, LINE_SIZE - 1);
-	strncat(path, file_name, LINE_SIZE - strlen(path) - 1);
-	strncat(path, CONF_FILE_TYPE, LINE_SIZE - strlen(path) - 1);
-	printf("get path: %s\n", path);
-	TSVresult *db = NULL;
-    if ( !TSVinit ( &db, path ) ) {
-        TSVclear ( db );
-        return 0;
+int initChannelPoll(TSVresult *db, int channel_id, SlaveDataItemList *list ){
+    RESET_LIST ( list )
+    if(db == NULL){
+        return 1;
     }
     int nt = TSVntuples ( db );
-    if(nt <= 0 ){
-		TSVclear ( db );
+    int n = 0;
+    for(int i = 0;i<nt;i++){
+        int v = TSVgetis ( db, i, "channel_id" );
+        if(v == channel_id){
+            n++;
+        }
+    }
+    if ( TSVnullreturned ( db ) ) {
+        putsde("null returned while reading channel_poll file 1\n");
+        return 0;
+    }
+    if(n <= 0 ){
 		printdo("no slave poll commands for channel_id=%d\n", channel_id);
         return 1;
     }
-    ALLOC_LIST ( list,nt );
-    if ( list->max_length!=nt ) {
+    ALLOC_LIST ( list,n );
+    if ( list->max_length!=n ) {
 		FREE_LIST(list);
-		TSVclear ( db );
         putsde ( "failed to allocate memory for channel poll list\n" );
         return 0;
     }
     for(int i = 0; i<nt; i++) {
-		if(LL >= LML) break;
-		int is = TSVgetis ( db, i, "interval_s" );
-		int ins = TSVgetis ( db, i, "interval_ns" );
-		char *cmd = TSVgetvalues(db, i, "cmd");
-		char *data_type = TSVgetvalues(db, i, "data_type");
-		if ( TSVnullreturned ( db ) ) {
-			FREE_LIST(list);
-			TSVclear ( db );
-			putsde("null returned while reading channel_poll file 2\n");
-			return 0;
-		}
-		if(is < 0 || ins < 0){
-			FREE_LIST(list);
-			TSVclear ( db );
-			printde("channel poll file: bad interval where channel_id = %d\n", channel_id);
-			return 0;
-		}
-		LIll.interval.tv_sec = is;
-		LIll.interval.tv_nsec = ins;
-		strncpy(LIll.cmd, cmd, SLAVE_CMD_MAX_SIZE);
-		if(!setDataByType(data_type, &LIll)){
-			FREE_LIST(list);
-			TSVclear ( db );
-			printde("   at row %d in %s\n", i, path);
-			return 0;
-		}
-		if ( !initMutex ( &LIll.mutex ) ) {
-			FREE_LIST ( list );
-			TSVclear ( db );
-			putsde ( "failed to initialize slave data mutex\n" );
-			return 0;
-		}
-		LIll.state = INIT;
-		LL++;
-		//printf("init poll LL++\n");
+	    int v = TSVgetis ( db, i, "channel_id" );
+	    if(v == channel_id){
+			if(LL >= LML) break;
+            int is = TSVgetis ( db, i, "interval_s" );
+            int ins = TSVgetis ( db, i, "interval_ns" );
+            char *cmd = TSVgetvalues(db, i, "cmd");
+            char *data_type = TSVgetvalues(db, i, "data_type");
+            if ( TSVnullreturned ( db ) ) {
+                FREE_LIST(list);
+                putsde("null returned while reading channel_poll file 2\n");
+                return 0;
+            }
+            if(is < 0 || ins < 0){
+                FREE_LIST(list);
+                printde("channel poll file: bad interval where channel_id = %d\n", channel_id);
+                return 0;
+            }
+            LIll.interval.tv_sec = is;
+            LIll.interval.tv_nsec = ins;
+            strncpy(LIll.cmd, cmd, SLAVE_CMD_MAX_SIZE);
+            if(!setDataByType(data_type, &LIll)){
+                FREE_LIST(list);
+                printde("   at row %d\n", i);
+                return 0;
+            }
+            if ( !initMutex ( &LIll.mutex ) ) {
+                FREE_LIST ( list );
+                putsde ( "failed to initialize slave data mutex\n" );
+                return 0;
+            }
+            LIll.state = INIT;
+            LL++;
+            //printf("init poll LL++\n");
+        }
     }
     //printf("poll LL=%d\n",LL);
-    TSVclear ( db );
     return 1;
 }
 
-int initChannelSetCmd(char *file_name, int channel_id, SlaveSetItemList *list ){
+int initChannelSetCmd(TSVresult *db, int channel_id, SlaveSetItemList *list ){
     RESET_LIST ( list )
-	char path[LINE_SIZE];
-	path[0] = '\0';
-	strncat(path, CHANNELS_SET_DIR, LINE_SIZE - 1);
-	strncat(path, file_name, LINE_SIZE - strlen(path) - 1);
-	strncat(path, CONF_FILE_TYPE, LINE_SIZE - strlen(path) - 1);
-	printf("set path: %s\n", path);
-	TSVresult *db = NULL;
-    if ( !TSVinit ( &db, path ) ) {
-        TSVclear ( db );
-        return 0;
+    if(db == NULL){
+        return 1;
     }
     int nt = TSVntuples ( db );
-    if(nt <= 0 ){
-		TSVclear ( db );
+    int n = 0;
+    for(int i = 0;i<nt;i++){
+        int v = TSVgetis ( db, i, "channel_id" );
+        if(v == channel_id){
+            n++;
+        }
+    }
+    if ( TSVnullreturned ( db ) ) {
+        putsde("null returned while reading channel_poll file 1\n");
+        return 0;
+    }
+    if(n <= 0 ){
 		printdo("no slave set commands for channel_id=%d\n", channel_id);
         return 1;
     }
-    ALLOC_LIST ( list,nt )
-    if ( list->max_length!=nt ) {
+    ALLOC_LIST ( list,n )
+    if ( list->max_length!=n ) {
 		FREE_LIST(list);
-		TSVclear ( db );
         putsde ( "failed to allocate memory for channel poll list\n" );
         return 0;
     }
     for(int i = 0;i<nt;i++){
-		if(LL >= LML) break;
-		char *cmd = TSVgetvalues(db, i, "cmd");
-		char *data_type = TSVgetvalues(db, i, "data_type");
-		if ( TSVnullreturned ( db ) ) {
-			FREE_LIST(list);
-			TSVclear ( db );
-			putsde("null returned while reading channel_poll file 2\n");
-			return 0;
-		}
-		strncpy(LIll.cmd, cmd, SLAVE_CMD_MAX_SIZE);
-		if(!setSetCmdByType(data_type, &LIll)){
-			FREE_LIST(list);
-			TSVclear ( db );
-			printde("   at row %d in %s\n", i, path);
-			return 0;
-		}
-		LL++;
+        int v = TSVgetis ( db, i, "channel_id" );
+        if(v == channel_id){
+			if(LL >= LML) break;
+            char *cmd = TSVgetvalues(db, i, "cmd");
+            char *data_type = TSVgetvalues(db, i, "data_type");
+            if ( TSVnullreturned ( db ) ) {
+                FREE_LIST(list);
+                putsde("null returned while reading channel_poll file 2\n");
+                return 0;
+            }
+            strncpy(LIll.cmd, cmd, SLAVE_CMD_MAX_SIZE);
+            if(!setSetCmdByType(data_type, &LIll)){
+                FREE_LIST(list);
+                printde("   at row %d\n", i);
+                return 0;
+            }
+            LL++;
+        }
     }
-    TSVclear ( db );
     return 1;
 }
 
-int initChannelList ( ChannelList *list, int max_retry, const char *config_path ) {
-	RESET_LIST ( list )
+int initChannelList ( ChannelList *list, int max_retry, const char *config_path, const char *poll_path, const char *set_path  ) {
     TSVresult *r = NULL;
     if ( !TSVinit ( &r, config_path ) ) {
         TSVclear ( r );
         return 0;
     }
+    TSVresult *r_poll = NULL;
+    if ( !TSVinit ( &r_poll, poll_path ) ) {
+        TSVclear ( r_poll );
+        r_poll = NULL;
+        printde("failed to read file: %s\n", poll_path);
+    }
+    TSVresult *r_set = NULL;
+    if ( !TSVinit ( &r_set, set_path ) ) {
+        TSVclear ( r_set );
+        r_set = NULL;
+        printde("failed to read file: %s\n", set_path);
+    }
     int n = TSVntuples ( r );
     if ( n <= 0 ) {
-        TSVclear ( r );
+        TSVclear ( r );TSVclear ( r_poll );TSVclear ( r_set );
         putsde ( "no data rows in file\n" );
         return 0;
     }
+	RESET_LIST ( list )
     ALLOC_LIST ( list,n )
     if ( list->max_length!=n ) {
-		TSVclear ( r );
+		TSVclear ( r );TSVclear ( r_poll );TSVclear ( r_set );
         putsde ( "failed to allocate memory for channel list\n" );
         return 0;
     }
     for ( int i = 0; i < LML; i++ ) {
         LIi.id = TSVgetis ( r, i, "id" );
-        char *get_path = TSVgetvalues ( r, i, "get" );
-        char *set_path = TSVgetvalues ( r, i, "set" );
         if ( TSVnullreturned ( r ) ) {
             break;
         }
-        if(!initChannelPoll(get_path, LIi.id, &LIi.data_list)){
-			TSVclear ( r );
+        if(!initChannelPoll(r_poll, LIi.id, &LIi.data_list)){
+			TSVclear ( r );TSVclear ( r_poll );TSVclear ( r_set );
             FREE_LIST ( list );
             return 0;
         }
-        if(!initChannelSetCmd(set_path, LIi.id, &LIi.set_list)){
-			TSVclear ( r );
+        if(!initChannelSetCmd(r_set, LIi.id, &LIi.set_list)){
+			TSVclear ( r );TSVclear ( r_poll );TSVclear ( r_set );
             FREE_LIST ( list );
             return 0;
         }
         LL++;
     }
-    TSVclear ( r );
+    TSVclear ( r );TSVclear ( r_poll );TSVclear ( r_set );
     if ( list->length != list->max_length ) {
         printde ( "check file %s: list.length=%u but %u expected\n", config_path, list->length, list->max_length );
         FREE_LIST ( list );

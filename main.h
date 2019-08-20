@@ -19,15 +19,17 @@
 #define APP_NAME_STR TOSTRING(APP_NAME)
 
 #ifdef MODE_FULL
-#define CONF_DIR "/etc/controller/" APP_NAME_STR "/"
+#define CONF_DIR "/etc/controller/" APP_NAME_STR "/config/"
 #endif
 #ifndef MODE_FULL
 #define CONF_DIR "./config/"
 #endif
+#define CONF_FILE_TYPE ".tsv"
 #define CONFIG_FILE "" CONF_DIR "app.tsv"
 #define CHANNELS_CONFIG_FILE "" CONF_DIR "channel/items.tsv"
-#define CHANNELS_GET_FILE "" CONF_DIR "channel/interface/get.tsv"
-#define CHANNELS_SET_FILE "" CONF_DIR "channel/interface/set.tsv"
+#define CHANNELS_GET_DIR "" CONF_DIR "channel/interface/get/"
+#define CHANNELS_SET_DIR "" CONF_DIR "channel/interface/set/"
+
 
 #define WAIT_RESP_TIMEOUT 1
 #define MAX_RETRY 3

@@ -60,7 +60,7 @@ void serveRequest(int SERVER_FD, const char *SERVER_CMD){
 				FORLISTN(channel->data_list, j){
                     SlaveDataItem *item = &channel->data_list.item[j];
                     if(strncmp(SERVER_CMD, item->cmd, SLAVE_CMD_MAX_SIZE) == 0){
-                        if(item->result && item->sendFunction!=NULL){
+                        if(item->result == 1 && item->sendFunction!=NULL){
                             item->sendFunction(SERVER_FD, channel->id, &item->mutex, &item->data);
                         }
                     }
@@ -156,7 +156,7 @@ int initApp() {
 
 
 int initData() {
-    if ( !initChannelList ( &channel_list, max_retry, CHANNELS_CONFIG_FILE,  CHANNELS_GET_FILE, CHANNELS_SET_FILE) ) {
+    if ( !initChannelList ( &channel_list, max_retry, CHANNELS_CONFIG_FILE) ) {
         freeChannelList ( &channel_list );
         goto failed;
     }
