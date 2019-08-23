@@ -64,7 +64,7 @@ char * getDataTypeStr ( int v ) {
 
 
 void printData ( int fd ) {
-    char q[LINE_SIZE*2];
+    char q[LINE_SIZE*3];
     snprintf ( q, sizeof q, "CONFIG_FILE: %s\n", CONFIG_FILE );
     SEND_STR ( q )
     snprintf ( q, sizeof q, "CHANNELS_CONFIG_FILE: %s\n", CHANNELS_CONFIG_FILE );

@@ -1,6 +1,6 @@
 
-#ifndef GWAI_H
-#define GWAI_H
+#ifndef GWST_H
+#define GWST_H
 
 #include <dirent.h>
 #include "lib/util.h"
@@ -15,7 +15,7 @@
 #include "lib/acpp/server/parallel.h"
 #include "lib/acpp/cmd/main.h"
 
-#define APP_NAME gwai
+#define APP_NAME gwst
 #define APP_NAME_STR TOSTRING(APP_NAME)
 
 #ifdef MODE_FULL
