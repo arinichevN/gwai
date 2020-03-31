@@ -10,8 +10,8 @@
 int puart_readResponse(int fd, char *buf, int len){
 	if(!serial_canRead(fd, PUART_TIMEOUT_MS)){
 		putsde("failed to read slave response\n");
-		//return PUART_NO_RESPONSE;
-		return PUART_CONNECTION_FAILED;
+		return PUART_NO_RESPONSE;
+		//return PUART_CONNECTION_FAILED;
 	}
 	size_t n = serial_readUntil(fd, buf, len, PUART_DELIMITER_END);
     tcflush(fd,TCIOFLUSH);

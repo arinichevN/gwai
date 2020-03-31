@@ -307,7 +307,7 @@ int serial_canRead(int fd, int timeout_ms){
 	struct pollfd fds[1];
 	fds[0].fd = fd;
 	fds[0].events = POLLIN;
-	int ret = poll (fds, 2, timeout_ms);
+	int ret = poll (fds, 1, timeout_ms);
 	if (ret == -1) {
 		perrord ("poll");
 		return 0;
@@ -368,6 +368,21 @@ size_t serial_read(int fd, void *buf, size_t buf_size) {
 size_t serial_readUntil(int fd, char *buf, size_t buf_size, char end) {
     char x;
     size_t c = 0;
+    while (c < buf_size && read(fd, &x, 1) == 1) {
+        buf[c] = x;
+        c++;
+        if(x == end) break;
+    }
+    tcflush(fd, TCIFLUSH);//flushes data received but not read
+	return c;
+}
+
+size_t serial_readFromTo(int fd, char *buf, size_t buf_size, char start, char end) {
+	char x;
+    size_t c = 0;
+    if(c >= buf_size) return c;
+    while (read(fd, &x, 1) != 1 || x != start);
+    buf[c] = x; c++;
     while (c < buf_size && read(fd, &x, 1) == 1) {
         buf[c] = x;
         c++;

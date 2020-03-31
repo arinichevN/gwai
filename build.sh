@@ -48,27 +48,48 @@ function conf_autostart {
 
 function build_lib {
 	gcc $1  -c app.c -D_REENTRANT $DEBUG_PARAM  && \
-	gcc $1 -c util.c -D_REENTRANT $DEBUG_PARAM  && \
+	gcc $1  -c util.c -D_REENTRANT $DEBUG_PARAM  && \
 	gcc $1  -c timef.c -D_REENTRANT $DEBUG_PARAM  && \
 	gcc $1  -c tsv.c -D_REENTRANT $DEBUG_PARAM  && \
 	gcc $1 -c serial.c -D_REENTRANT $DEBUG_PARAM  && \
-	gcc $1 -c puart.c -D_REENTRANT $DEBUG_PARAM  && \
-	cd acpp && \
-	gcc     -c main.c -D_REENTRANT $DEBUG_PARAM  && \
-	gcc   -c server/parallel.c -D_REENTRANT $DEBUG_PARAM  && \
+	cd acp && \
+	gcc $1  -c main.c -D_REENTRANT $DEBUG_PARAM  && \
+	cd serial && \
+	gcc $1  -c main.c -D_REENTRANT $DEBUG_PARAM  && \
+	cd ../tcp && \
+	gcc $1 -c main.c -D_REENTRANT $DEBUG_PARAM  && \
+	gcc $1 -c server/parallel.c -D_REENTRANT $DEBUG_PARAM  && \
+	
+	cd ../ && \
 	cd ../ && \
 	echo "library: making archive..." && \
 	rm -f libpac.a
-	ar -crv libpac.a app.o util.o timef.o tsv.o serial.o puart.o  acpp/main.o  acpp/parallel.o && echo "library: done"
+	ar -crv libpac.a app.o util.o timef.o tsv.o serial.o  acp/main.o   acp/serial/main.o  acp/tcp/main.o  acp/tcp/parallel.o && echo "library: done"
+}
+
+function build_blocks {
+	cd model &&
+	gcc  -c SlaveIntervalGetCommand.c -D_REENTRANT $DEBUG_PARAM  && \
+	gcc  -c SlaveGetCommand.c -D_REENTRANT $DEBUG_PARAM  && \
+	gcc  -c SlaveSetCommand.c -D_REENTRANT $DEBUG_PARAM  && \
+	gcc  -c SlaveBGetCommand.c -D_REENTRANT $DEBUG_PARAM  && \
+	gcc  -c SerialThread.c -D_REENTRANT $DEBUG_PARAM  && \
+	gcc  -c SerialThreadStarter.c -D_REENTRANT $DEBUG_PARAM  && \
+	gcc  -c Channel.c -D_REENTRANT $DEBUG_PARAM  && \
+	
+	#echo "model: making archive..."
+	echo "model: making archive..."  
+	#rm -f libmodel.a
+	#ar -crv libmodel.a app.o util.o timef.o tsv.o serial.o  acp/main.o   acp/serial/main.o  acp/tcp/main.o  acp/tcp/parallel.o && echo "model: done"
 }
 
 #    1         2
 #debug_mode bin_name
 function build {
 	cd lib && \
-	build_lib $1 && \ 
-	cd ../ 
-	gcc -D_REENTRANT $1 $3  main.c -o $2 $DEBUG_PARAM -lpthread -L./lib -lpac && echo "Application successfully compiled. Launch command: sudo ./"$2
+	build_lib $1 && \
+	cd ../
+	gcc -D_REENTRANT $1 $3  main.c -o $2 $DEBUG_PARAM -lpthread -L./lib -lpac && echo "Application successfully compiled. Launch command: ./"$2
 }
 
 
@@ -85,7 +106,13 @@ function full_nc {
 	move_bin && move_bin_dbg
 }
 function part_debug {
+	clear
+	clear
 	build $MODE_DEBUG $APP_DBG $NONE
+}
+
+function part {
+	build $NONE $APP_DBG $NONE
 }
 
 function uninstall_nc {
@@ -99,15 +126,15 @@ function uninstall {
 	update-rc.d -f $APP remove
 	rm -rf $CONF_DIR_APP
 }
+
 #test
 function build_lib_st {
 	gcc $1  -c app.c -D_REENTRANT $DEBUG_PARAM  && \
 	gcc $1  -c timef.c -D_REENTRANT $DEBUG_PARAM  && \
 	gcc $1  -c serial.c -D_REENTRANT $DEBUG_PARAM  && \
-	gcc $1  -c puart.c -D_REENTRANT $DEBUG_PARAM  && \
 	echo "library: making archive..." && \
 	rm -f libpacst.a
-	ar -crv libpacst.a app.o timef.o serial.o puart.o && echo "libpacst: done" 
+	ar -crv libpacst.a app.o timef.o serial.o && echo "libpacst: done" 
 }
 function build_st {
 	cd lib && \
@@ -118,5 +145,30 @@ function build_st {
 function puart_test {
 	build_st $MODE_DEBUG $APP_DBG $NONE
 }
+
+function build_lib_a1 {
+	gcc $1  -c app.c -D_REENTRANT $DEBUG_PARAM  && \
+	gcc $1  -c timef.c -D_REENTRANT $DEBUG_PARAM  && \
+	gcc $1  -c serial.c -D_REENTRANT $DEBUG_PARAM  && \
+	cd acp && \
+	gcc   -c main.c -D_REENTRANT $DEBUG_PARAM  && \
+	cd serial && \
+	gcc   -c main.c -D_REENTRANT $DEBUG_PARAM  && \
+	cd ../ && \
+	cd ../ && \
+	echo "library: making archive..." && \
+	rm -f libpacst.a
+	ar -crv libpacst.a app.o timef.o serial.o acp/main.o acp/serial/main.o && echo "libpacst: done" 
+}
+function build_a1 {
+	cd lib && \
+	build_lib_a1 $1 && \
+	cd ../ 
+	gcc -D_REENTRANT $1 $3 test/acp1/main.c -o acp1 $DEBUG_PARAM -pthread -L./lib -lpacst && echo "Application successfully compiled. Launch command: sudo ./acp1"
+}
+function acp1_test {
+	build_a1 $MODE_DEBUG $APP_DBG $NONE
+}
+
 f=$1
 ${f}

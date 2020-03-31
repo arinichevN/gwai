@@ -138,14 +138,14 @@ int TSVinit (TSVresult **item, const char *path ) {
 #endif
         return 0;
     }
-    r->buf = NULL, r->column_name = NULL, r->data = NULL, r->buf_length = 0, r->column_name_length = 0, r->data_length = 0, r->null_returned=0;
+    r->buf = NULL; r->column_name = NULL; r->data = NULL; r->buf_length = 0; r->column_name_length = 0; r->data_length = 0; r->null_returned=0;
     FILE* stream = fopen ( path, "r" );
     if ( stream == NULL ) {
 #ifdef MODE_DEBUG
         printde ( "%s(): on file: %s - ", F, path );
         perror ( "" );
 #endif
-        return 0;
+        goto failed;
     }
     int l = getBufLength ( stream );
     if ( l <= 0 ) {
@@ -153,7 +153,7 @@ int TSVinit (TSVresult **item, const char *path ) {
         fprintf ( stderr, "%s(): %s: not enough data for buffer\n", F,path );
 #endif
         fclose ( stream );
-        return 0;
+        goto failed;
     }
     size_t sz = l * sizeof * ( r->buf );
     r->buf = malloc ( sz );
@@ -163,7 +163,7 @@ int TSVinit (TSVresult **item, const char *path ) {
         perror ( "" );
 #endif
         fclose ( stream );
-        return 0;
+        goto failed;
     }
     memset ( r->buf, 0, sz );
     r->buf_length = l;
@@ -173,7 +173,7 @@ int TSVinit (TSVresult **item, const char *path ) {
         fprintf ( stderr, "%s(): %s: not enough data for column\n", F, path );
 #endif
         fclose ( stream );
-        return 0;
+        goto failed;
     }
     sz = l * sizeof * ( r->column_name );
     r->column_name = malloc ( sz );
@@ -183,7 +183,7 @@ int TSVinit (TSVresult **item, const char *path ) {
         perror ( "" );
 #endif
         fclose ( stream );
-        return 0;
+		goto failed;
     }
     memset ( r->column_name, 0, sz );
     r->column_name_length = l;
@@ -193,7 +193,7 @@ int TSVinit (TSVresult **item, const char *path ) {
         fprintf ( stderr, "%s(): %s: not enough data for data\n", F, path );
 #endif
         fclose ( stream );
-        return 0;
+        goto failed;
     }
     sz = l * sizeof * ( r->data );
     r->data = malloc ( sz );
@@ -203,7 +203,7 @@ int TSVinit (TSVresult **item, const char *path ) {
         perror ( "" );
 #endif
         fclose ( stream );
-        return 0;
+        goto failed;
     }
     memset ( r->data, 0, sz );
     r->data_length = l;
@@ -213,10 +213,13 @@ int TSVinit (TSVresult **item, const char *path ) {
 #ifdef MODE_DEBUG
         fprintf ( stderr, "%s(): %s: checking result is bad\n", F, path );
 #endif
-        return 0;
+        goto failed;
     }
     *item = r;
     return 1;
+    failed:
+    TSVclear(r);
+    return 0;
 }
 
 int TSVntuples ( TSVresult *r ) {
@@ -259,6 +262,7 @@ int TSVgetis ( TSVresult *r, int row_number, const char * column_name ) {
     }
     return atoi ( s );
 }
+
 
 double TSVgetfs ( TSVresult *r, int row_number, const char * column_name ) {
     char *s = TSVgetvalues ( r, row_number, column_name );

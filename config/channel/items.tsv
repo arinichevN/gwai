@@ -1,4 +1,5 @@
-id	get	set
-1	regps	regps
-2	regps	regps
-3	regps	regps
+id	iget	get	tget	set
+20	none	app	none	app
+21	none	all	none	all
+22	none	all	none	all
+23	none	all	none	all

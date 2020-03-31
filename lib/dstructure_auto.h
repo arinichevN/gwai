@@ -37,6 +37,9 @@
 
 #define FOREACH_LLIST(ITEM,LIST,T) for(T * ITEM=(LIST)->top;ITEM!=NULL;ITEM=ITEM->next)
 #define FORLLi(T) FOREACH_LLIST(item,list,T)
+#define LLIST_DEL_ITEM(ITEM, LIST, T) {T *prev = NULL;FOREACH_LLIST ( curr, LIST, T ) {if ( curr == (ITEM) ) {if ( prev != NULL ) {prev->next = curr->next;} else {(LIST)->top = curr->next;}if ( curr == (LIST)->last ) {(LIST)->last = prev;}(LIST)->length--; break;}prev = curr;}}
+#define LLIST_ADD_ITEM(ITEM, LIST) if ((LIST)->length < INT_MAX ) {if ( (LIST)->top == NULL ) {(LIST)->top = ITEM;} else {(LIST)->last->next = ITEM;}(LIST)->last = ITEM;(LIST)->length++;}
+
 
 #define FIFO_LIST_INITIALIZER {.item = NULL, .length = 0, .pop_item = NULL, .push_item = NULL}
 #define DEC_FIFO_LIST(T) struct fifo_item_ ## T {T data;int free;struct fifo_item_ ## T *prev;struct fifo_item_ ## T *next;};typedef struct fifo_item_ ## T FIFOItem_ ## T;typedef struct {FIFOItem_ ## T *item;size_t length;FIFOItem_ ## T *push_item;FIFOItem_ ## T *pop_item;Mutex mutex;} FIFOItemList_ ## T;

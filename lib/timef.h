@@ -77,10 +77,10 @@ typedef struct {
 } Ton_ts;
 
 typedef struct {
-    struct timespec start;
+  //  struct timespec start;
     struct timespec interval;
     struct timespec end;
-    int ready;
+  //  int ready;
     int done;
 } Ton;
 
@@ -116,17 +116,17 @@ extern void ton_ts_touch(Ton_ts *t);
 
 extern int ton ( Ton *item ) ;
 
+extern int tonr ( Ton *item ) ;
+
 extern int tonsp ( Ton *item ) ;
 
-extern int toni (struct timespec interval, Ton *item );
+extern void ton_setInterval ( struct timespec interval, Ton *item  ) ;
 
-extern void tonSetInterval ( struct timespec interval, Ton *item  ) ;
+extern void ton_reset ( Ton *item  ) ;
 
-extern void tonReset ( Ton *item  ) ;
+extern struct timespec ton_timePassed ( const Ton *item ) ;
 
-extern struct timespec tonTimePassed ( const Ton *item ) ;
-
-extern struct timespec tonTimeRest ( const Ton *item ) ;
+extern struct timespec ton_timeRest ( const Ton *item ) ;
 
 extern struct timespec getTimePassed_tv(const Ton_ts *t);
 

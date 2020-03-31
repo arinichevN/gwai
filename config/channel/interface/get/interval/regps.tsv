@@ -1,0 +1,25 @@
+cmd			interval_s	interval_ns
+gfts			3		0
+gout			3		0
+grgoal			3		0
+gspsout			3		0
+gdpshys			3		0
+gdpsmin			3		0
+gdpsmax			3		0
+gpidkp			3		0
+gpidki			3		0
+gpidkd			3		0
+gregstt			3		0
+gregmode		3		0
+gregmeth		3		0
+gregenbl		3		0
+gregout			3		0
+gsecstt			3		0
+gsecenbl		3		0
+gsectm			3		0
+gsecout			3		0
+gcpwmr			3		0
+gcpwmp			3		0
+gcpwmdcmin		3		0
+gcpwmdcmax		3		0
+

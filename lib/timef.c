@@ -142,16 +142,35 @@ void ton_ts_touch ( Ton_ts *t ) {
     t->ready=1;
 }
 
+//int ton ( Ton *item ) {
+    //struct timespec now;
+    //clock_gettime ( LIB_CLOCK, &now );
+    //if ( !item->ready ) {
+        //item->start=now;
+        //timespecadd ( &item->start, &item->interval, &item->end );
+        //item->ready = 1;
+    //}
+    //if ( timespeccmp ( &now, &item->end, > ) ) {
+        //item->ready = 0;
+        //return 1;
+    //}
+    //return 0;
+//}
+
 int ton ( Ton *item ) {
     struct timespec now;
     clock_gettime ( LIB_CLOCK, &now );
-    if ( !item->ready ) {
-        item->start=now;
-        timespecadd ( &item->start, &item->interval, &item->end );
-        item->ready = 1;
-    }
     if ( timespeccmp ( &now, &item->end, > ) ) {
-        item->ready = 0;
+        return 1;
+    }
+    return 0;
+}
+
+int tonr ( Ton *item ) {
+    struct timespec now;
+    clock_gettime ( LIB_CLOCK, &now );
+    if ( timespeccmp ( &now, &item->end, > ) ) {
+        timespecadd ( &now, &item->interval, &item->end );
         return 1;
     }
     return 0;
@@ -161,11 +180,6 @@ int tonsp ( Ton *item ) {
     if(item->done) return 1;
     struct timespec now;
     clock_gettime ( LIB_CLOCK, &now );
-    if ( !item->ready ) {
-        item->start=now;
-        timespecadd ( &item->start, &item->interval, &item->end );
-        item->ready = 1;
-    }
     if ( timespeccmp ( &now, &item->end, > ) ) {
         item->done = 1;
         return 1;
@@ -173,39 +187,27 @@ int tonsp ( Ton *item ) {
     return 0;
 }
 
-int toni (struct timespec interval, Ton *item ) {
+void ton_setInterval ( struct timespec interval, Ton *item ) {
+    item->interval=interval;
+}
+
+void ton_reset ( Ton *item ) {
+    //item->ready=0;
     struct timespec now;
     clock_gettime ( LIB_CLOCK, &now );
-    if ( !item->ready ) {
-        item->start=now;
-        item->ready = 1;
-    }
-    timespecadd(&item->start, &interval, &item->end);
-    if ( timespeccmp ( &now, &item->end, > ) ) {
-        item->ready = 0;
-        return 1;
-    }
-    return 0;
-}
-
-void tonSetInterval ( struct timespec interval, Ton *item ) {
-    item->interval=interval;
-    timespecadd ( &item->start, &item->interval, &item->end );
-}
-
-void tonReset ( Ton *item ) {
-    item->ready=0;
+    timespecadd ( &now, &item->interval, &item->end );
     item->done=0;
 }
 
-struct timespec tonTimePassed ( const Ton *item ) {
-    struct timespec now, out;
+struct timespec ton_timePassed ( const Ton *item ) {
+    struct timespec now, start, out;
     clock_gettime ( LIB_CLOCK, &now );
-    timespecsub ( &now, &item->start, &out );
+    timespecsub ( &item->end, &item->interval, &start );
+    timespecsub ( &now, &start, &out );
     return out;
 }
 
-struct timespec tonTimeRest ( const Ton *item ) {
+struct timespec ton_timeRest ( const Ton *item ) {
     struct timespec now, out;
     clock_gettime ( LIB_CLOCK, &now );
     if ( timespeccmp ( &item->end, &now, > ) ) {

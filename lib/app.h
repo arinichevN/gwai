@@ -103,7 +103,8 @@
 #define STOP_ALL_LIST_THREADS(list) FORLISTP(list, i){pthread_cancel((list)->item[i].thread);} FORLISTP(list, i){void * result;pthread_join((list)->item[i].thread, &result);}
 #endif
 
-#define STOP_THREAD(item) pthread_cancel(item);pthread_join(item, NULL);
+//#define STOP_THREAD(item) pthread_cancel((item));pthread_join((item), NULL);
+#define STOP_THREAD(item) while(pthread_cancel ( (item) )!= 0){;}   pthread_join((item), NULL);
 
 #define FUN_LOCK(T) int lock ## T (T *item) {if (item == NULL) {return 0;} if (pthread_mutex_lock(&(item->mutex.self)) != 0) {return 0;}return 1;}
 #define FUN_TRYLOCK(T) int tryLock ## T (T  *item) {if (item == NULL) {return 0;} if (pthread_mutex_trylock(&(item->mutex.self)) != 0) {return 0;}return 1;}
@@ -122,6 +123,29 @@ enum {
     APP_EXIT
 } State;
 
+typedef enum {
+   OFF,
+   INIT,
+   RUN,
+   DO,
+   TERMINATED,
+   SEARCH_NEED,
+   SEARCH_PATH,
+   FIND_CHANNELS,
+   SLAVE_GET,
+   SLAVE_RESET,
+   SLAVE_COOP,
+   BUSY,
+   IDLE,
+   WAIT,
+   OPENED,
+   CLOSED,
+   OPEN,
+   CLOSE,
+   UNDEFINED,
+   DISABLE,
+   FAILURE
+} ProgState;
 
 
 

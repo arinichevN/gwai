@@ -48,19 +48,6 @@ char * getStateStr ( int state ) {
     return "\0";
 }
 
-char * getDataTypeStr ( int v ) {
-    switch ( v ) {
-		case SLAVE_TYPE_FTS: 
-			return "FTS";
-	    case SLAVE_TYPE_INT:
-		    return "INT";
-	    case SLAVE_TYPE_DOUBLE:
-		    return "DOUBLE";
-	    case SLAVE_TYPE_UNKNOWN:
-		    return "SUNKNOWN";
-	}
-    return "\0";
-}
 
 
 void printData ( int fd ) {
@@ -136,51 +123,69 @@ void printData ( int fd ) {
     	
 	
    
-	SEND_STR ( "+-----------------------------------------------------------------------------------+\n" )
-    SEND_STR ( "|                                  channel                                          |\n" )
-    SEND_STR ( "|           +-----------------------------------------------------------------------+\n" )
-    SEND_STR ( "|           |                         slave poll command                            |\n" )
-    SEND_STR ( "+-----------+-----------+-----------+-----------+-----------+-----------+-----------+\n" )
-    SEND_STR ( "|     id    |    cmd    |   type    |interval_s |interval_ns|  result   |   state   |\n" )
-    SEND_STR ( "+-----------+-----------+-----------+-----------+-----------+-----------+-----------+\n" )
+	SEND_STR ( "+-----------------------------------------------------------------------+\n" )
+    SEND_STR ( "|                                  channel                              |\n" )
+    SEND_STR ( "|           +-----------------------------------------------------------+\n" )
+    SEND_STR ( "|           |                    slave poll command                     |\n" )
+    SEND_STR ( "+-----------+-----------+-----------+-----------+-----------+-----------+\n" )
+    SEND_STR ( "|     id    |    cmd    |interval_s |interval_ns|  result   |   state   |\n" )
+    SEND_STR ( "+-----------+-----------+-----------+-----------+-----------+-----------+\n" )
     FORLISTN ( channel_list, i ) {
 		Channel *channel = &channel_list.item[i];
-		FORLISTN(channel->data_list, j){
-			SlaveDataItem *item = &channel->data_list.item[j];
-	        snprintf ( q, sizeof q, "|%11d|%11s|%11s|%11ld|%11ld|%11d|%11s|\n",
+		FORLISTN(channel->igcmd_list, j){
+			SlaveIntervalGetCommand *item = &channel->igcmd_list.item[j];
+	        snprintf ( q, sizeof q, "|%11d|%11s|%11ld|%11ld|%11d|%11s|\n",
 	                   channel->id,
-	                   item->cmd,
-	                   getDataTypeStr(item->data_type),
+	                   item->command.name,
 	                   item->interval.tv_sec,
 	                   item->interval.tv_nsec,
-	                   item->result,
+	                   item->command.result,
 	                   getStateStr(item->state)
 	                 );
 	        SEND_STR ( q )
 		}
 	}
-	SEND_STR ( "+-----------+-----------+-----------+-----------+-----------+-----------+-----------+\n" )
+	SEND_STR ( "+-----------+-----------+-----------+-----------+-----------+-----------+\n" )
 	
-	SEND_STR ( "+-----------------------------------+\n" )
-    SEND_STR ( "|              channel              |\n" )
-    SEND_STR ( "|           +-----------------------+\n" )
-    SEND_STR ( "|           |   slave set command   |\n" )
-    SEND_STR ( "+-----------+-----------+-----------+\n" )
-    SEND_STR ( "|     id    |    cmd    |   type    |\n" )
-    SEND_STR ( "+-----------+-----------+-----------+\n" )
+	SEND_STR ( "+----------------------------+\n" )
+    SEND_STR ( "|           channel          |\n" )
+    SEND_STR ( "|           +----------------+\n" )
+    SEND_STR ( "|           |  slave get cmd |\n" )
+    SEND_STR ( "+-----------+----------------+\n" )
+    SEND_STR ( "|     id    |       cmd      |\n" )
+    SEND_STR ( "+-----------+----------------+\n" )
     FORLISTN ( channel_list, i ) {
 		Channel *channel = &channel_list.item[i];
-		FORLISTN(channel->set_list, j){
-			SlaveSetItem *item = &channel->set_list.item[j];
-	        snprintf ( q, sizeof q, "|%11d|%11s|%11s|\n",
+		FORLISTN(channel->gcmd_list, j){
+			SlaveGetCommand *item = &channel->gcmd_list.item[j];
+	        snprintf ( q, sizeof q, "|%11d|%16s|\n",
 	                   channel->id,
-	                   item->cmd,
-	                   getDataTypeStr(item->data_type)	                   
+	                   item->name                 
 	                 );
 	        SEND_STR ( q )
 		}
 	}
-	SEND_STR ( "+-----------+-----------+-----------+\n" )
+	SEND_STR ( "+-----------+----------------+\n" )
+
+	SEND_STR ( "+----------------------------+\n" )
+    SEND_STR ( "|           channel          |\n" )
+    SEND_STR ( "|           +----------------+\n" )
+    SEND_STR ( "|           |  slave set cmd |\n" )
+    SEND_STR ( "+-----------+----------------+\n" )
+    SEND_STR ( "|     id    |       cmd      |\n" )
+    SEND_STR ( "+-----------+----------------+\n" )
+    FORLISTN ( channel_list, i ) {
+		Channel *channel = &channel_list.item[i];
+		FORLISTN(channel->scmd_list, j){
+			SlaveSetCommand *item = &channel->scmd_list.item[j];
+	        snprintf ( q, sizeof q, "|%11d|%16s|\n",
+	                   channel->id,
+	                   item->name                 
+	                 );
+	        SEND_STR ( q )
+		}
+	}
+	SEND_STR ( "+-----------+----------------+\n" )
 	
 	
 	SEND_STR ( "+-----------------------+\n" )
@@ -198,8 +203,22 @@ void printData ( int fd ) {
 	        SEND_STR ( q )
 		}
     }
-    SEND_STR ( "+-----------+-----------+\n\f" )
+    SEND_STR ( "+-----------+-----------+\n" )
     
+    SEND_STR ( "+-----------------------+\n" )
+    SEND_STR ( "|    TCP connections    |\n" )
+    SEND_STR ( "+-----------+-----------+\n" )
+    SEND_STR ( "|     id    |   state   |\n" )
+    SEND_STR ( "+-----------+-----------+\n" )
+    FOREACH_LLIST(item, &server.connection_list, ServermConn) {
+	        snprintf ( q, sizeof q, "|%11zu|%11s|\n",
+	                   item->id,
+	                   serverm_getConnStateStr(item)
+	                 );
+	        SEND_STR ( q )
+    }
+    SEND_STR ( "+-----------+-----------+\n" )
+    SEND_STR ( ">\n\0" )
 }
 
 
