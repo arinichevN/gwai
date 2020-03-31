@@ -170,9 +170,11 @@ int st_assignChannelToThread(SerialThread *thread, int ind ){
 }
 
 
-int st_channelExists (int channel_id, int fd) {
+int st_channelExists (int channel_id, int fd, Mutex *mutex) {
+	lockMutex(mutex);
 	int r = acpserial_sendChCmd (fd, channel_id, ACP_CMD_CHANNEL_EXISTS);
 	if(r == ACP_ERROR_CONNECTION){
+		unlockMutex(mutex);
 		return r;
 	}
 	size_t resp_len = 128;
@@ -182,22 +184,27 @@ int st_channelExists (int channel_id, int fd) {
     r = acpserial_readResponse(fd, response, resp_len);
     if(r != ACP_SUCCESS){
 		printde("\tcommunication error where channel_id=%d\n", channel_id);
+		unlockMutex(mutex);
 		return r;
 	}
 	int id, exs = 0;
     r = acpserial_extractI2(response, resp_len, &id, &exs);
     if(r != ACP_SUCCESS){
 		printde("\tparsing error where channel_id=%d\n", channel_id);
+		unlockMutex(mutex);
 		return r;
 	}
 	if(exs != ACP_CHANNEL_EXISTS){
 		printde("channel %d returned not exists\n", channel_id);
+		unlockMutex(mutex);
 		return ACP_ERROR;
 	}
     if(id != channel_id){
 		printde("expected %d id but returned %d\n", channel_id, id);
+		unlockMutex(mutex);
 		return ACP_ERROR_BAD_CHANNEL_ID;
 	}
+	unlockMutex(mutex);
     return ACP_SUCCESS;
 }
 
@@ -215,7 +222,7 @@ void st_searchNAddUnconnectedChannel(SerialThread *thread) {
 		int done = 0;
 		if(channel->thread == NULL) {
 			printf("TRYIN TO CONNECT CHANNEL\n");
-			int r = st_channelExists(channel->id, thread->fd);
+			int r = st_channelExists(channel->id, thread->fd, &thread->mutex);
 			if(r==ACP_ERROR_CONNECTION){
 				if(thread->retry < thread->max_retry){
 					thread->retry++;
@@ -278,7 +285,7 @@ void st_control(SerialThread *item){
 				Channel *channel = item->channelptr_list.item[i].item;
 				lockMutex(&channel->mutex);
 				if(channel->thread == NULL){//unconnected channel
-					int r = st_channelExists( channel->id, item->fd);
+					int r = st_channelExists( channel->id, item->fd, &item->mutex);
 					//int r = 1;
 					if(r==ACP_ERROR_NO_RESPONSE){
 						printdo("channel id=%d not found on serial port id=%d\n", channel->id, item->id);

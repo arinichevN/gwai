@@ -83,13 +83,13 @@ void printData ( int fd ) {
 	SEND_STR ( q )
     SEND_STR ( "+-----------+----------------+-----------+-----------+-----------+-----------+\n" )
     
-	SEND_STR ( "+------------------------------------------------------------------------------------------------------+\n" )
-    SEND_STR ( "|                                          serial thread                                               |\n" )
-    SEND_STR ( "+-----------+-------------+-----------+-----------+----------------+-----------+-----------+-----------+\n" )
-    SEND_STR ( "|     ptr   |    state    |   cd_sec  |  cd_nsec  |  serial_path   |serial_rate|   retry   | max_retry |\n" )
-    SEND_STR ( "+-----------+-------------+-----------+-----------+----------------+-----------+-----------+-----------+\n" )
+	SEND_STR ( "+---------------------------------------------------------------------------------------------------------+\n" )
+    SEND_STR ( "|                                           serial thread                                                 |\n" )
+    SEND_STR ( "+--------------+-------------+-----------+-----------+----------------+-----------+-----------+-----------+\n" )
+    SEND_STR ( "|       ptr    |    state    |   cd_sec  |  cd_nsec  |  serial_path   |serial_rate|   retry   | max_retry |\n" )
+    SEND_STR ( "+--------------+-------------+-----------+-----------+----------------+-----------+-----------+-----------+\n" )
     FOREACH_LLIST(item, &serial_thread_list, SerialThread) {
-        snprintf ( q, sizeof q, "|%11p|%13s|%11ld|%11ld|%16s|%11d|%11d|%11d|\n",
+        snprintf ( q, sizeof q, "|%14p|%13s|%11ld|%11ld|%16s|%11d|%11d|%11d|\n",
                    (void *)item,
                    getStateStr(item->state),
                    item->cycle_duration.tv_sec,
@@ -101,16 +101,16 @@ void printData ( int fd ) {
                  );
         SEND_STR ( q )
     }
-    SEND_STR ( "+-----------+-------------+-----------+-----------+----------------+-----------+-----------+-----------+\n" )
+    SEND_STR ( "+--------------+-------------+-----------+-----------+----------------+-----------+-----------+-----------+\n" )
     
-    SEND_STR ( "+-----------------------------------------------------------+\n" )
-    SEND_STR ( "|                         channel                           |\n" )
-    SEND_STR ( "+-----------+-----------+-----------+-----------+-----------+\n" )
-    SEND_STR ( "|     id    | thread_pt |   state   |   retry   | max_retry |\n" )
-    SEND_STR ( "+-----------+-----------+-----------+-----------+-----------+\n" )
+    SEND_STR ( "+--------------------------------------------------------------+\n" )
+    SEND_STR ( "|                           channel                            |\n" )
+    SEND_STR ( "+-----------+--------------+-----------+-----------+-----------+\n" )
+    SEND_STR ( "|     id    |   thread_pt  |   state   |   retry   | max_retry |\n" )
+    SEND_STR ( "+-----------+--------------+-----------+-----------+-----------+\n" )
     FORLISTN ( channel_list, i ) {
 		Channel *item = &channel_list.item[i];
-        snprintf ( q, sizeof q, "|%11d|%11p|%11s|%11d|%11d|\n",
+        snprintf ( q, sizeof q, "|%11d|%14p|%11s|%11d|%11d|\n",
                    item->id,
                    (void *)item->thread,
                    getStateStr(item->state),
@@ -119,7 +119,7 @@ void printData ( int fd ) {
                  );
         SEND_STR ( q )
     }
-    SEND_STR ( "+-----------+-----------+-----------+-----------+-----------+\n" )
+    SEND_STR ( "+-----------+--------------+-----------+-----------+-----------+\n" )
     	
 	
    
@@ -188,22 +188,22 @@ void printData ( int fd ) {
 	SEND_STR ( "+-----------+----------------+\n" )
 	
 	
-	SEND_STR ( "+-----------------------+\n" )
-    SEND_STR ( "|      thread channels  |\n" )
-    SEND_STR ( "+-----------+-----------+\n" )
-    SEND_STR ( "|sthread_ptr| channel_id|\n" )
-    SEND_STR ( "+-----------+-----------+\n" )
+	SEND_STR ( "+--------------------------+\n" )
+    SEND_STR ( "|       thread channels    |\n" )
+    SEND_STR ( "+--------------+-----------+\n" )
+    SEND_STR ( "|  sthread_ptr | channel_id|\n" )
+    SEND_STR ( "+--------------+-----------+\n" )
     FOREACH_LLIST(item, &serial_thread_list, SerialThread) {
 		FOREACH_LLIST (channelptr, &item->channelptr_llist, ChannelPtr ) {
 			Channel *channel = channelptr->item;
-	        snprintf ( q, sizeof q, "|%11p|%11d|\n",
+	        snprintf ( q, sizeof q, "|%14p|%11d|\n",
 	                   (void *)item,
 	                   channel->id
 	                 );
 	        SEND_STR ( q )
 		}
     }
-    SEND_STR ( "+-----------+-----------+\n" )
+    SEND_STR ( "+--------------+-----------+\n" )
     
     SEND_STR ( "+-----------------------+\n" )
     SEND_STR ( "|    TCP connections    |\n" )
