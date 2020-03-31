@@ -19,6 +19,7 @@ int serveChannelCmd(int SERVER_FD, const char *SERVER_CMD, char *buf){
 	LIST_GETBYID(channel, &channel_list, channel_id)
 	if(channel == NULL || channel->thread == NULL) return 0;
 	lockMutex(&channel->mutex);
+	if(channel->thread == NULL) goto failed;
 	SlaveGetCommand *igcmd = channel_getIntervalGetCmd(channel, SERVER_CMD);
 	if(igcmd != NULL){
 		printdo("iget cmd %s for channel %d data %s\n", SERVER_CMD, channel->id, igcmd->data);
@@ -45,6 +46,7 @@ int serveChannelCmd(int SERVER_FD, const char *SERVER_CMD, char *buf){
 		channel_sendRawDataToSlave(channel, buf);
 		goto success;
 	}
+	failed:
 	unlockMutex(&channel->mutex);
 	putsdo("request not served\n");
 	return 0;
