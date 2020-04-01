@@ -54,7 +54,7 @@ int acpserial_addCRC(char *buf, size_t buf_len){
 	size_t l = strlen(buf);
 	if((l + 3) > buf_len) {return 0;}
 	buf[l] = crc;
-	printdo("crc: %hhu\n", crc);
+	//printdo("crc: %hhu\n", crc);
 	buf[l+1] = ACP_DELIMITER_END;
 	buf[l+2] = '\0';
 	return 1;

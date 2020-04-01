@@ -231,8 +231,13 @@ int channel_control(Channel *item, int fd){
 	lockMutex(&item->mutex);
 	switch ( item->state ) {
 		case RUN:
+			if(item->thread == NULL){
+				item->state = OFF;
+				printde ( "channel: self disabled, id=%d\n", item->id );
+				break;
+			}
 	        FORLISTN(item->igcmd_list, i){
-	            r = sigc_control(&item->igcmd_list.item[i], fd, item->id );
+	            r = sigc_control(&item->igcmd_list.item[i], fd, &item->thread->mutex, item->id );
 	            if(r == ACP_ERROR_CONNECTION){
 	                if(item->retry < item->max_retry){
 	                    item->retry++;

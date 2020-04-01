@@ -17,7 +17,7 @@ DEC_LIST(SlaveIntervalGetCommand)
 
 extern void sigc_free(SlaveIntervalGetCommand *item);
 extern void sigc_reset(SlaveIntervalGetCommand *item);
-extern int sigc_control(SlaveIntervalGetCommand *item, int fd, int channel_id );
+extern int sigc_control(SlaveIntervalGetCommand *item, int fd, Mutex *smutex, int channel_id );
 extern int sigcList_init(SlaveIntervalGetCommandList *list, const char *dir, const char *file_name, const char *file_type);
 
 #endif 

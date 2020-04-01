@@ -65,26 +65,31 @@ int sigcList_init(SlaveIntervalGetCommandList *list, const char *dir, const char
     return 1;
 }
 
-static int channelGetRawData (int fd, Mutex *mutex, int channel_id, const char *cmd,  char *data, int len ) {
-	lockMutex(mutex);
+static int channelGetRawData (int fd, Mutex *dmutex, Mutex* smutex, int channel_id, const char *cmd,  char *data, int len ) {
+	lockMutex(smutex);
 	int r = acpserial_sendChCmd (fd, channel_id, cmd);
 	if(r == ACP_ERROR_CONNECTION){
-		unlockMutex(mutex);
+		unlockMutex(smutex);
 		return r;
 	}
-    memset(data, 0, len * sizeof (*data));
     CH_SLEEP_BEFORE_READ_SLAVE
+    lockMutex(dmutex);
+    memset(data, 0, len * sizeof (*data));
     r = acpserial_readResponse(fd, data, len);
-    unlockMutex(mutex);
     if(r != ACP_SUCCESS){
+		unlockMutex(dmutex);
+		unlockMutex(smutex);
 		printde("\tcommunication error where channel_id=%d\n", channel_id);
 		return r;
 	}
+	unlockMutex(smutex);
     r = acpserial_checkCRC(data);
     if(r != ACP_SUCCESS){
+		unlockMutex(dmutex);
 		return r;
 	}
 	acptcp_convertSerialPack(data);
+	unlockMutex(dmutex);
 	return ACP_SUCCESS;
 }
 
@@ -92,11 +97,11 @@ void sigc_reset(SlaveIntervalGetCommand *item){
 	item->command.result = 0;
 }
 
-int sigc_control(SlaveIntervalGetCommand *item, int fd, int channel_id ) {
+int sigc_control(SlaveIntervalGetCommand *item, int fd, Mutex *smutex, int channel_id ) {
     switch ( item->state ) {
     case WAIT:
         if ( tonr( &item->tmr ) ) {
-            item->command.result = channelGetRawData (fd, &item->command.mutex, channel_id,  item->command.name,  item->command.data, ACP_BUF_MAX_LENGTH);                    
+            item->command.result = channelGetRawData (fd, &item->command.mutex, smutex, channel_id,  item->command.name,  item->command.data, ACP_BUF_MAX_LENGTH);                    
         }
         break;
 	case OFF:

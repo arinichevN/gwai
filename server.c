@@ -14,7 +14,7 @@ int serveChannelCmd(int SERVER_FD, const char *SERVER_CMD, char *buf){
 		putsde("failed to get channel id\n");
 		return 0;
 	}
-	printdo("tcp: channel_id: %d\n", channel_id);
+	//printdo("tcp: channel_id: %d\n", channel_id);
 	Channel *channel = NULL;
 	LIST_GETBYID(channel, &channel_list, channel_id)
 	if(channel == NULL || channel->thread == NULL) return 0;
@@ -22,7 +22,7 @@ int serveChannelCmd(int SERVER_FD, const char *SERVER_CMD, char *buf){
 	if(channel->thread == NULL) goto failed;
 	SlaveGetCommand *igcmd = channel_getIntervalGetCmd(channel, SERVER_CMD);
 	if(igcmd != NULL){
-		printdo("iget cmd %s for channel %d data %s\n", SERVER_CMD, channel->id, igcmd->data);
+		//printdo("iget cmd %s for channel %d data %s\n", SERVER_CMD, channel->id, igcmd->data);
 		if( igcmd->result == ACP_SUCCESS ){
 			sendRawDataToClient(igcmd->data, SERVER_FD,  &igcmd->mutex);
 			goto success;
@@ -30,19 +30,19 @@ int serveChannelCmd(int SERVER_FD, const char *SERVER_CMD, char *buf){
 	}
 	SlaveGetCommand *gcmd = channel_getGetCmd(channel, SERVER_CMD);
 	if(gcmd != NULL){
-		printdo("get cmd %s for channel %d\n", SERVER_CMD, channel->id);
+		//printdo("get cmd %s for channel %d\n", SERVER_CMD, channel->id);
 		channel_slaveToClient(channel, buf, SERVER_FD );
 		goto success;
 	}
 	SlaveGetCommand *tgcmd = channel_getTextGetCmd(channel, SERVER_CMD);
 	if(tgcmd != NULL){
-		printdo("tget cmd %s for channel %d\n", SERVER_CMD, channel->id);
+		//printdo("tget cmd %s for channel %d\n", SERVER_CMD, channel->id);
 		channel_slaveToClientText (channel, buf, SERVER_FD );
 		goto success;
 	}
 	SlaveSetCommand *scmd = channel_getSetCmd(channel, SERVER_CMD);
 	if(scmd != NULL){
-		printdo("set cmd %s for channel %d\n", SERVER_CMD, channel->id);
+		//printdo("set cmd %s for channel %d\n", SERVER_CMD, channel->id);
 		channel_sendRawDataToSlave(channel, buf);
 		goto success;
 	}
@@ -137,10 +137,10 @@ int serveBroadcastCmd(int SERVER_FD, const char *SERVER_CMD, char *buf){
 		slaveToClientBroadcast (buf, SERVER_FD, &serial_thread_list);
 		goto success;
 	}
-	putsdo("broadcast command not found\n");
+	//putsdo("broadcast command not found\n");
 	return 0;
 	success:
-	putsdo("broadcast command served\n");
+	//putsdo("broadcast command served\n");
 	return 1;
 }
 
@@ -151,7 +151,7 @@ int serveRequest(int SERVER_FD, char *buf){
 		putsde("failed to get command\n");
 		return 0;
 	}
-	printdo("tcp: command: %s\n", SERVER_CMD);
+	//printdo("tcp: command: %s\n", SERVER_CMD);
 	if(serveBroadcastCmd(SERVER_FD, SERVER_CMD, buf)){
 		return 1;
 	}else if(serveChannelCmd(SERVER_FD, SERVER_CMD, buf)){

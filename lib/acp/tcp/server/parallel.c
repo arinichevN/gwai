@@ -14,7 +14,7 @@ static int serverm_wakeUpConnection(ServermConn *item, int fd){
 	if ( tryLockMutex ( &item->mutex ) ) {//printf("   locked id=%d\n", LIi.id);
 		if ( item->state == SERVERM_IDLE ) {
 			item->fd = fd;
-			printdo ( "SERVER THREAD %zu MARKED TO START\n", item->id );
+			//printdo ( "SERVER THREAD %zu MARKED TO START\n", item->id );
 			item->state = SERVERM_BUSY;
 			unlockMutex ( &item->mutex );
 			return 1;
@@ -37,7 +37,7 @@ void *serverm_connThreadFunction ( void *arg ) {
             NANOSLEEP(0,1000000);
             break;
         case SERVERM_BUSY:{
-			printdo("SERVERM_BUSY %zu\n", connection->id);
+			//printdo("SERVERM_BUSY %zu\n", connection->id);
          //   puts ( "\n\n" );
          //   printf ( "connection is busy %d\n", connection->id );
 	        int old_state;

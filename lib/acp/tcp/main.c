@@ -84,7 +84,7 @@ int acptcp_readPack(int fd, char *buf, size_t length) {
 		char x;
 		ssize_t n = read(fd, &x, 1);
 		if(n != 1){
-			printde("reading error: read() returned %zd\n", n);
+			//printde("reading failed: read() returned %zd\n", n);
 			break;
 		}
 		if(c == 0 && x == ACP_DELIMITER_START){
