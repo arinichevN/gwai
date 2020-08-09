@@ -9,8 +9,8 @@
 #define SLAVE_CMD_MAX_SIZE (SLAVE_CMD_MAX_LENGTH * sizeof(char))
 
 typedef struct {
+	int id;
     char data[ACP_BUF_MAX_LENGTH];
-    char name[ACP_CMD_MAX_LENGTH];
     Mutex mutex;
     int result;
 } SlaveGetCommand;

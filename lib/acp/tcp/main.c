@@ -76,15 +76,17 @@ int acptcp_readPack(int fd, char *buf, size_t length) {
     size_t c = 0;
     ssize_t lim = length-1;
     int start_detected = 0;
+    putsdo("tcp pack: reading...\n");
 	while(1){
 		if(c >= lim){
-			printde("%zu < %zd\n", c, lim);
-		   break;
+			printde("tcp: long package: %zu < %zd\n", c, lim);
+			break;
 		}
 		char x;
 		ssize_t n = read(fd, &x, 1);
+		printdo("%c", x);
 		if(n != 1){
-			//printde("reading failed: read() returned %zd\n", n);
+			printde("reading failed: read() returned %zd\n", n);
 			break;
 		}
 		if(c == 0 && x == ACP_DELIMITER_START){
@@ -148,6 +150,7 @@ int acptcp_readChannelId (int fd, int *channel_id  ) {
     ssize_t c = 0;
    // while (c < (ACP_CHANNEL_ID_STRLEN-1) && (read(fd, &x, 1) == 1)) {
    ssize_t lim = ACP_CHANNEL_ID_STRLEN-1;
+   int dcc = 0;
    while(1){
 		if(c >= lim){
 			printde("%zd < %zd\n", c, lim);
@@ -160,12 +163,17 @@ int acptcp_readChannelId (int fd, int *channel_id  ) {
 			break;
 		}
         if(x == ACP_DELIMITER_COLUMN){
+			dcc++;
+		}
+		if(dcc == 1){
+			buf[c] = x;
+	        c++;
+		}
+		if(dcc == 2){
 			*channel_id = atoi(buf);
 			printdo("tcp channel_id = %d\n", *channel_id);
 			return 1;
 		}
-		buf[c] = x;
-        c++;
     }
     return 0;
 }

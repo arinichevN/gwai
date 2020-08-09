@@ -5,10 +5,10 @@
 
 #include "../dstructure_auto.h"
 
-#define ACP_CMD_MAX_LENGTH 16
+//#define ACP_CMD_MAX_LENGTH 16
 #define ACP_BUF_MAX_LENGTH 256
 #define ACP_DATA_MAX_LENGTH (ACP_BUF_MAX_LENGTH - 5)
-#define ACP_PACK_MIN_LENGTH 5
+#define ACP_PACK_MIN_LENGTH 7
 #define ACP_WBUF_MAX_LENGTH 128
 #define ACP_CRC_BUF_MAX_LENGTH 2
 #define ACP_CHANNEL_ID_STRLEN 12
@@ -16,7 +16,7 @@
 #define ACP_CRC_INI 33
 #define ACP_CRC_EXTRA 11
 
-#define ACP_CHECK_CRC 0
+#define ACP_CHECK_CRC 1
 
 #define ACP_PACK_TIMEOUT_MS 10000UL
 #define ACP_BUSY_TIMEOUT_MS 5UL
@@ -29,11 +29,25 @@
 #define ACP_DELIMITER_COLUMN_STR	";"
 #define ACP_DELIMITER_END_STR		">"
 
+#define ACP_SIGN_REQUEST			'?'
+#define ACP_SIGN_RESPONSE			'!'
+#define ACP_SIGN_REQUEST_STR		"?"
+#define ACP_SIGN_RESPONSE_STR		"!"
+
 #define ACP_EMPTY_PACK_STR			ACP_DELIMITER_START_STR ACP_DELIMITER_END_STR
 
 #define ADSS ACP_DELIMITER_START_STR
 #define ADCS ACP_DELIMITER_COLUMN_STR 
 #define ADES ACP_DELIMITER_END_STR
+#define ASREQ ACP_SIGN_REQUEST_STR
+#define ASRES ACP_SIGN_RESPONSE_STR
+
+#define ACP_IND_CMD 1
+#define ACP_IND_ID 2
+#define ACP_IND_PARAM1 3
+#define ACP_IND_PARAM2 4
+#define ACP_IND_PARAM3 5
+#define ACP_IND_PARAM4 6
 
 enum ACPResultE {
 	ACP_BUSY,
@@ -75,8 +89,6 @@ DEC_LIST(Peer)
 
 
 extern void acp_dumpBuf ( const char *buf, size_t buf_size );
-
-extern int acp_cmdcmp ( char *buf, char * cmd );
 
 extern int acp_packGetCellStr (const char *pack_str, int cell_ind, char *out, size_t out_len);
 

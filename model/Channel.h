@@ -32,10 +32,10 @@ DEC_LLIST(ChannelPtr)
 
 extern void channel_resetData(Channel *item);
 extern int channel_control(Channel *item, int fd);
-extern SlaveGetCommand *channel_getIntervalGetCmd(Channel *channel, const char *cmd);
-extern SlaveGetCommand *channel_getGetCmd(Channel *channel, const char *cmd);
-extern SlaveGetCommand *channel_getTextGetCmd(Channel *channel, const char *cmd);
-extern SlaveSetCommand *channel_getSetCmd(Channel *channel, const char *cmd);
+extern SlaveGetCommand *channel_getIntervalGetCmd(Channel *channel, int cmd);
+extern SlaveGetCommand *channel_getGetCmd(Channel *channel, int cmd);
+extern SlaveGetCommand *channel_getTextGetCmd(Channel *channel, int cmd);
+extern SlaveSetCommand *channel_getSetCmd(Channel *channel, int cmd);
 extern int channel_slaveToClient (Channel *channel, char *pack_str, int tcp_fd);
 extern int channel_slaveToClientText (Channel *channel, char *pack_str, int tcp_fd);
 extern int channel_sendRawDataToSlave (Channel *channel, char *pack_str);

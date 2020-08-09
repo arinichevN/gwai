@@ -62,7 +62,7 @@ int acpserial_addCRC(char *buf, size_t buf_len){
 
 int acpserial_tcpToSerial(char *buf, size_t buf_len){
 	size_t l1 = strlen(buf);
-	if(l1 < ACP_PACK_MIN_LENGTH) return 0;
+	if(l1 < ACP_PACK_MIN_LENGTH - 1) return 0;
 	buf[l1-1] = ACP_DELIMITER_COLUMN;
 	return acpserial_addCRC(buf, buf_len);
 }
@@ -99,43 +99,58 @@ int acpserial_checkChannelIdCRC(const char *str, int channel_id){
 
 
 
-int acpserial_buildPackSI(char *buf, size_t buf_max_len, const char *v1, int v2){
-	int r = snprintf(buf, buf_max_len, ADSS "%s" ADCS "%d" ADCS, v1, v2 );
+int acpserial_buildPackSI(char *buf, size_t buf_max_len, char sign, const char *v1, int v2){
+	int r = snprintf(buf, buf_max_len, ADSS "%c" ADCS "%s" ADCS "%d" ADCS, sign, v1, v2 );
 	if(r > 0 && r < (int) buf_max_len){return acpserial_addCRC(buf, buf_max_len);}
 	return 0;
 }
-int acpserial_buildPackSII(char *buf, size_t buf_max_len, const char *v1, int v2, int v3){
-	int r = snprintf(buf, buf_max_len, ADSS "%s" ADCS "%d" ADCS "%d" ADCS, v1, v2, v3 );
+int acpserial_buildPackSII(char *buf, size_t buf_max_len, char sign, const char *v1, int v2, int v3){
+	int r = snprintf(buf, buf_max_len, ADSS "%c" ADCS "%s" ADCS "%d" ADCS "%d" ADCS, sign, v1, v2, v3 );
 	if(r > 0 && r < (int) buf_max_len){return acpserial_addCRC(buf, buf_max_len);}
 	return 0;
 }
-int acpserial_buildPackSIF(char *buf, size_t buf_max_len, const char *v1, int v2, double v3){
-	int r = snprintf(buf, buf_max_len, ADSS "%s" ADCS "%d" ADCS "%f" ADCS, v1, v2, v3 );
+int acpserial_buildPackSIF(char *buf, size_t buf_max_len, char sign, const char *v1, int v2, double v3){
+	int r = snprintf(buf, buf_max_len, ADSS "%c" ADCS "%s" ADCS "%d" ADCS "%f" ADCS, sign, v1, v2, v3 );
 	if(r > 0 && r < (int) buf_max_len){return acpserial_addCRC(buf, buf_max_len);}
 	return 0;
 }
-int acpserial_buildPackSIS(char *buf, size_t buf_max_len, const char *v1, int v2, const char *v3){
-	int r = snprintf(buf, buf_max_len, ADSS "%s" ADCS "%d" ADCS "%s" ADCS, v1, v2, v3 );
+int acpserial_buildPackSIS(char *buf, size_t buf_max_len, char sign, const char *v1, int v2, const char *v3){
+	int r = snprintf(buf, buf_max_len, ADSS "%c" ADCS "%s" ADCS "%d" ADCS "%s" ADCS, sign, v1, v2, v3 );
 	if(r > 0 && r < (int) buf_max_len){return acpserial_addCRC(buf, buf_max_len);}
 	return 0;
 }
-int acpserial_buildPackII(char *buf, size_t buf_max_len, int v1, int v2){
-	int r = snprintf(buf, buf_max_len, ADSS "%d" ADCS "%d" ADCS, v1, v2 );
+int acpserial_buildPackII(char *buf, size_t buf_max_len, char sign, int v1, int v2){
+	int r = snprintf(buf, buf_max_len, ADSS "%c" ADCS "%d" ADCS "%d" ADCS, sign, v1, v2 );
 	if(r > 0 && r < (int) buf_max_len){return acpserial_addCRC(buf, buf_max_len);}
 	return 0;
 }
-int acpserial_buildPackIUl(char *buf, size_t buf_max_len, int v1, unsigned long v2){
-	int r = snprintf(buf, buf_max_len, ADSS "%d" ADCS "%lu" ADCS, v1, v2 );
+int acpserial_buildPackIII(char *buf, size_t buf_max_len, char sign, int v1, int v2, int v3){
+	int r = snprintf(buf, buf_max_len, ADSS "%c" ADCS "%d" ADCS "%d" ADCS "%d" ADCS, sign, v1, v2, v3 );
 	if(r > 0 && r < (int) buf_max_len){return acpserial_addCRC(buf, buf_max_len);}
 	return 0;
 }
-int acpserial_buildPackIF(char *buf, size_t buf_max_len, int v1, double v2){
-	int r = snprintf(buf, buf_max_len, ADSS "%d" ADCS "%f" ADCS, v1, v2 );
+int acpserial_buildPackIUl(char *buf, size_t buf_max_len, char sign, int v1, unsigned long v2){
+	int r = snprintf(buf, buf_max_len, ADSS "%c" ADCS "%d" ADCS "%lu" ADCS, sign, v1, v2 );
 	if(r > 0 && r < (int) buf_max_len){return acpserial_addCRC(buf, buf_max_len);}
 	return 0;
 }
-int acpserial_buildPackIFTS(char *buf, size_t buf_max_len, int v1, FTS *v2){
-	int r = snprintf(buf, buf_max_len, ADSS "%d" ADCS "%f" ADCS "%ld" ADCS "%ld" ADCS "%d" ADCS, v1, v2->value, v2->tm.tv_sec, v2->tm.tv_nsec, v2->state );
+int acpserial_buildPackIF(char *buf, size_t buf_max_len, char sign, int v1, double v2){
+	int r = snprintf(buf, buf_max_len, ADSS "%c" ADCS "%d" ADCS "%f" ADCS, sign, v1, v2 );
+	if(r > 0 && r < (int) buf_max_len){return acpserial_addCRC(buf, buf_max_len);}
+	return 0;
+}
+int acpserial_buildPackIIF(char *buf, size_t buf_max_len, char sign, int v1, int v2, double v3){
+	int r = snprintf(buf, buf_max_len, ADSS "%c" ADCS "%d" ADCS "%d" ADCS "%f" ADCS, sign, v1, v2, v3 );
+	if(r > 0 && r < (int) buf_max_len){return acpserial_addCRC(buf, buf_max_len);}
+	return 0;
+}
+int acpserial_buildPackIIS(char *buf, size_t buf_max_len, char sign, int v1, int v2, const char *v3){
+	int r = snprintf(buf, buf_max_len, ADSS "%c" ADCS "%d" ADCS "%d" ADCS "%s" ADCS, sign, v1, v2, v3 );
+	if(r > 0 && r < (int) buf_max_len){return acpserial_addCRC(buf, buf_max_len);}
+	return 0;
+}
+int acpserial_buildPackIFTS(char *buf, size_t buf_max_len, char sign, int v1, FTS *v2){
+	int r = snprintf(buf, buf_max_len, ADSS "%c" ADCS "%d" ADCS "%f" ADCS "%ld" ADCS "%ld" ADCS "%d" ADCS, sign, v1, v2->value, v2->tm.tv_sec, v2->tm.tv_nsec, v2->state );
 	if(r > 0 && r < (int) buf_max_len){return acpserial_addCRC(buf, buf_max_len);}
 	return 0;
 }
@@ -186,31 +201,31 @@ int acpserial_sendTcpPack(int fd, char *pack_str){printdo("tcp pack: %s\n", pack
 	return acpserial_send ( pack_str, fd );
 }
 
-int acpserial_sendChCmd(int fd, int channel_id, const char *cmd){
+int acpserial_sendChCmd(int fd, int channel_id, int cmd){
 	size_t blen=40;
 	char buf[blen];
-	acpserial_buildPackSI(buf, blen, cmd, channel_id);
+	acpserial_buildPackII(buf, blen, ACP_SIGN_REQUEST, cmd, channel_id);
 	return acpserial_send ( buf, fd );
 }
 
-int acpserial_sendChCmdF1(int fd, int channel_id, const char *cmd, double v){
+int acpserial_sendChCmdF1(int fd, int channel_id, int cmd, double v){
 	size_t blen=64;
 	char buf[blen];
-	acpserial_buildPackSIF(buf, blen, cmd, channel_id, v);
+	acpserial_buildPackIIF(buf, blen, ACP_SIGN_REQUEST, cmd, channel_id, v);
 	return acpserial_send ( buf, fd );
 }
 
-int acpserial_sendChCmdI1(int fd, int channel_id, const char *cmd, int v){
+int acpserial_sendChCmdI1(int fd, int channel_id, int cmd, int v){
 	size_t blen=64;
 	char buf[blen];
-	acpserial_buildPackSII(buf, blen, cmd, channel_id, v);
+	acpserial_buildPackIII(buf, blen, ACP_SIGN_REQUEST, cmd, channel_id, v);
 	return acpserial_send ( buf, fd );
 }
 
-int acpserial_sendChCmdStr(int fd, int channel_id, const char *cmd, const char *v){
+int acpserial_sendChCmdStr(int fd, int channel_id, int cmd, const char *v){
 	size_t blen=64;
 	char buf[blen];
-	acpserial_buildPackSIS(buf, blen, cmd, channel_id, v);
+	acpserial_buildPackIIS(buf, blen, ACP_SIGN_REQUEST, cmd, channel_id, v);
 	return acpserial_send ( buf, fd );
 }
 
@@ -219,7 +234,7 @@ int acpserial_extractFTS(const char *buf, size_t len, FTS *v){
 		return ACP_ERROR_CRC;
 	}
 	FTS sfts;
-	int r = sscanf(buf, ADSS "%d" ADCS "%lf" ADCS "%ld" ADCS "%ld" ADCS "%d" ADCS, &sfts.id, &sfts.value, &sfts.tm.tv_sec, &sfts.tm.tv_nsec, &sfts.state );
+	int r = sscanf(buf, ADSS ASRES ADCS "%d" ADCS "%lf" ADCS "%ld" ADCS "%ld" ADCS "%d" ADCS, &sfts.id, &sfts.value, &sfts.tm.tv_sec, &sfts.tm.tv_nsec, &sfts.state );
 	int nr = 4;
 	if(r != nr){
 		printde("failed to parse response (found:%d, need:%d)\n", r, nr);
@@ -235,7 +250,7 @@ int acpserial_extractI2(const char *buf, size_t len, int *v1, int *v2){
 		return ACP_ERROR_CRC;
 	}
 	int vv1, vv2;
-	int r = sscanf(buf, ADSS "%d" ADCS "%d" ADCS, &vv1, &vv2 );
+	int r = sscanf(buf, ADSS ASRES ADCS "%d" ADCS "%d" ADCS, &vv1, &vv2 );
 	int nr = 2;
 	if(r != nr){
 		printde("failed to parse response (found:%d, need:%d)\n", r, nr);
@@ -252,10 +267,11 @@ int acpserial_extractSI(const char *buf, size_t len, char *v1, size_t v1_len, in
 		return ACP_ERROR_CRC;
 	}
 	if(buf[0] != ACP_DELIMITER_START) return ACP_ERROR_FORMAT;
+	if(buf[1] != ACP_SIGN_RESPONSE) return ACP_ERROR_FORMAT;
 	char vv1[v1_len];
 	memset(vv1, 0, v1_len);
 	size_t c = 0;
-	for(size_t i=1;i<len;i++){
+	for(size_t i=3;i<len;i++){
 		if(buf[i] == ACP_DELIMITER_COLUMN) {c = i; break;}
 		if(!acp_checkStrColumnChar(buf[i])){
 			return ACP_ERROR_FORMAT;

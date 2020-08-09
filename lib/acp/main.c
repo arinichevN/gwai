@@ -26,14 +26,6 @@ void acp_dumpBuf ( const char *buf, size_t buf_size ) {
     putchar ( '\n' );
 }
 
-//int acp_cmdcmp ( char *buf, char * cmd ) {
-	//int len = acp_getCmdLength(buf);
-    //if ( strncmp ( buf, cmd, len ) == 0 ) {
-        //return 1;
-    //}
-    //return 0;
-//}
-
 static size_t acp_gotoCell(const char *pack_str, int cell_ind){
 	int c = 0;
 	size_t l = strlen(pack_str);

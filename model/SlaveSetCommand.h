@@ -4,7 +4,7 @@
 #define CHANNELS_SET_DIR "" CONF_DIR "channel/interface/set/"
 
 typedef struct {
-    char name[SLAVE_CMD_MAX_LENGTH];
+    int id;
 } SlaveSetCommand;
 DEC_LIST(SlaveSetCommand)
 

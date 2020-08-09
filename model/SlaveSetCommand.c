@@ -28,14 +28,14 @@ int sscList_init(SlaveSetCommandList *list, const char *dir, const char *file_na
     }
     for(int i = 0;i<nt;i++){
 		if(LL >= LML) break;
-		char *cmd = TSVgetvalues(db, i, "cmd");
+		int cmd = TSVgetis(db, i, "cmd");
 		if ( TSVnullreturned ( db ) ) {
 			FREE_LIST(list);
 			TSVclear ( db );
 			putsde("\tnull returned while reading channel_poll file 2\n");
 			return 0;
 		}
-		strncpy(LIll.name, cmd, SLAVE_CMD_MAX_SIZE);
+		LIll.id = cmd;
 		LL++;
     }
     TSVclear ( db );

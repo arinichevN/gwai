@@ -172,7 +172,7 @@ int st_assignChannelToThread(SerialThread *thread, int ind ){
 
 int st_channelExists (int channel_id, int fd, Mutex *mutex) {
 	lockMutex(mutex);
-	int r = acpserial_sendChCmd (fd, channel_id, ACP_CMD_CHANNEL_EXISTS);
+	int r = acpserial_sendChCmd (fd, channel_id, CMD_GET_ID_EXISTS);
 	if(r == ACP_ERROR_CONNECTION){
 		unlockMutex(mutex);
 		return r;

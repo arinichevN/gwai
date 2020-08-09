@@ -23,14 +23,14 @@ int sbgcList_init(SlaveBGetCommandList *list, const char *path ){
     }
     for(int i = 0; i<nt; i++) {
 		if(LL >= LML) break;
-		char *cmd = TSVgetvalues(db, i, "cmd");
+		int cmd = TSVgetis(db, i, "cmd");
 		if ( TSVnullreturned ( db ) ) {
 			FREE_LIST(list);
 			TSVclear ( db );
 			putsde("null returned while reading broadcast get file 2\n");
 			return 0;
 		}
-		strncpy(LIll.name, cmd, SLAVE_CMD_MAX_SIZE);
+		LIll.id = cmd;
 		if ( !initMutex ( &LIll.mutex ) ) {
 			FREE_LIST ( list );
 			TSVclear ( db );
@@ -46,9 +46,9 @@ int sbgcList_init(SlaveBGetCommandList *list, const char *path ){
     return 1;
 }
 
-SlaveBGetCommand *sbgc_getByCmd(const char *cmd, SlaveBGetCommandList *list){
+SlaveBGetCommand *sbgc_getByCmd(int cmd, SlaveBGetCommandList *list){
 	FORLi{
-		if(strncmp(cmd, LIi.name, SLAVE_CMD_MAX_SIZE) == 0){
+		if(cmd == LIi.id){
 		   return &LIi;
 		}
 	}

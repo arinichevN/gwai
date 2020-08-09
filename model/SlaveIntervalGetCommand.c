@@ -34,7 +34,7 @@ int sigcList_init(SlaveIntervalGetCommandList *list, const char *dir, const char
 		if(LL >= LML) break;
 		int is = TSVgetis ( db, i, "interval_s" );
 		int ins = TSVgetis ( db, i, "interval_ns" );
-		char *cmd = TSVgetvalues(db, i, "cmd");
+		int cmd = TSVgetis(db, i, "cmd");
 		if ( TSVnullreturned ( db ) ) {
 			FREE_LIST(list);
 			TSVclear ( db );
@@ -49,7 +49,7 @@ int sigcList_init(SlaveIntervalGetCommandList *list, const char *dir, const char
 		}
 		LIll.interval.tv_sec = is;
 		LIll.interval.tv_nsec = ins;
-		strncpy(LIll.command.name, cmd, SLAVE_CMD_MAX_SIZE);
+		LIll.command.id = cmd;
 		if ( !initMutex ( &LIll.command.mutex ) ) {
 			FREE_LIST ( list );
 			TSVclear ( db );
@@ -65,7 +65,7 @@ int sigcList_init(SlaveIntervalGetCommandList *list, const char *dir, const char
     return 1;
 }
 
-static int channelGetRawData (int fd, Mutex *dmutex, Mutex* smutex, int channel_id, const char *cmd,  char *data, int len ) {
+static int channelGetRawData (int fd, Mutex *dmutex, Mutex* smutex, int channel_id, int cmd,  char *data, int len ) {
 	lockMutex(smutex);
 	int r = acpserial_sendChCmd (fd, channel_id, cmd);
 	if(r == ACP_ERROR_CONNECTION){
@@ -101,7 +101,7 @@ int sigc_control(SlaveIntervalGetCommand *item, int fd, Mutex *smutex, int chann
     switch ( item->state ) {
     case WAIT:
         if ( tonr( &item->tmr ) ) {
-            item->command.result = channelGetRawData (fd, &item->command.mutex, smutex, channel_id,  item->command.name,  item->command.data, ACP_BUF_MAX_LENGTH);                    
+            item->command.result = channelGetRawData (fd, &item->command.mutex, smutex, channel_id,  item->command.id,  item->command.data, ACP_BUF_MAX_LENGTH);                    
         }
         break;
 	case OFF:

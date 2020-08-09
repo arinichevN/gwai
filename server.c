@@ -7,14 +7,14 @@ void sendRawDataToClient (char *data, int tcp_fd,  Mutex *mutex ) {
 	acptcp_send ( q, tcp_fd );
 }
 
-int serveChannelCmd(int SERVER_FD, const char *SERVER_CMD, char *buf){
+int serveChannelCmd(int SERVER_FD, int SERVER_CMD, char *buf){
 	printdo("serving request: %s\n", buf);
 	int channel_id;
-	if ( !acp_packGetCellInt(buf, 1, &channel_id) ) {
+	if ( !acp_packGetCellInt(buf, ACP_IND_ID, &channel_id) ) {
 		putsde("failed to get channel id\n");
 		return 0;
 	}
-	//printdo("tcp: channel_id: %d\n", channel_id);
+	printdo("tcp: channel_id: %d\n", channel_id);
 	Channel *channel = NULL;
 	LIST_GETBYID(channel, &channel_list, channel_id)
 	if(channel == NULL || channel->thread == NULL) return 0;
@@ -56,24 +56,25 @@ int serveChannelCmd(int SERVER_FD, const char *SERVER_CMD, char *buf){
 	return 1;
 }
 
-int serveAppCmd(int SERVER_FD, const char *SERVER_CMD, char *buf){
-	if ( CMD_IS ( ACP_CMD_APP_PRINT ) ) {
-        printData ( SERVER_FD );
-        return 1;
-    } else if ( CMD_IS ( ACP_CMD_APP_RESET ) ) {
-		app_state = APP_RESET;
-		return 1;
-    } else {
-		putsdo("no app command matched\n");
+int serveAppCmd(int SERVER_FD, int SERVER_CMD, char *buf){
+	switch(SERVER_CMD){
+		case CMD_GATEWAY_PRINT:
+			printData ( SERVER_FD );
+	        return 1;
+	    case CMD_GATEWAY_RESET:
+		    app_state = APP_RESET;
+			return 1;
+		default:
+			putsdo("no app command matched\n");
 	}
     return 0;
 }
 
 
 
-SlaveSetCommand *getSetCmd(const char *cmd, SlaveSetCommandList *list){
+SlaveSetCommand *getSetCmd(int cmd, SlaveSetCommandList *list){
 	FORLi{
-		if(strncmp(cmd, LIi.name, SLAVE_CMD_MAX_SIZE) == 0){
+		if(cmd == LIi.id){
 		   return &LIi;
 		}
 	}
@@ -126,7 +127,7 @@ int slaveToClientBroadcast (char *pack_str, int tcp_fd, SerialThreadLList *list 
 	return 0;
 }
 
-int serveBroadcastCmd(int SERVER_FD, const char *SERVER_CMD, char *buf){
+int serveBroadcastCmd(int SERVER_FD, int SERVER_CMD, char *buf){
 	SlaveSetCommand *scmd = getSetCmd(SERVER_CMD, &bscmd_list);
 	if(scmd != NULL){
 		sendRawDataToSlaveBroadcast(buf, &serial_thread_list);
@@ -145,13 +146,12 @@ int serveBroadcastCmd(int SERVER_FD, const char *SERVER_CMD, char *buf){
 }
 
 int serveRequest(int SERVER_FD, char *buf){
-	char SERVER_CMD[ACP_CMD_MAX_LENGTH];
-	memset(SERVER_CMD, 0, sizeof SERVER_CMD);
-	if ( !acp_packGetCellStr(buf, 0, SERVER_CMD, ACP_CMD_MAX_LENGTH)) {
+	int SERVER_CMD;
+	if ( !acp_packGetCellInt(buf, ACP_IND_CMD, &SERVER_CMD)) {
 		putsde("failed to get command\n");
 		return 0;
 	}
-	//printdo("tcp: command: %s\n", SERVER_CMD);
+	printdo("tcp: command: %d\n", SERVER_CMD);
 	if(serveBroadcastCmd(SERVER_FD, SERVER_CMD, buf)){
 		return 1;
 	}else if(serveChannelCmd(SERVER_FD, SERVER_CMD, buf)){
@@ -159,6 +159,6 @@ int serveRequest(int SERVER_FD, char *buf){
 	}else if (serveAppCmd(SERVER_FD, SERVER_CMD, buf) ) {
 		return 1;
 	}
-	printdo("tcp: unknown command: %s\n", SERVER_CMD);
+	printdo("tcp: unknown command: %d\n", SERVER_CMD);
 	return 0;
 }

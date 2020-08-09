@@ -34,40 +34,40 @@ void channel_resetData(Channel *item){
 	unlockMutex(&item->mutex);
 }
 
-SlaveGetCommand *channel_getIntervalGetCmd(Channel *channel, const char *cmd){
+SlaveGetCommand *channel_getIntervalGetCmd(Channel *channel, int cmd){
 	FORLISTN(channel->igcmd_list, j){
 		SlaveGetCommand *item = &channel->igcmd_list.item[j].command;
-		if(strncmp(cmd, item->name, SLAVE_CMD_MAX_SIZE) == 0){
+		if(cmd == item->id){
 		   return item;
 		}
 	}
     return NULL;
 }
 
-SlaveGetCommand *channel_getGetCmd(Channel *channel, const char *cmd){
+SlaveGetCommand *channel_getGetCmd(Channel *channel, int cmd){
 	FORLISTN(channel->gcmd_list, j){
 		SlaveGetCommand *item = &channel->gcmd_list.item[j];
-		if(strncmp(cmd, item->name, SLAVE_CMD_MAX_SIZE) == 0){
+		if(cmd == item->id){
 		   return item;
 		}
 	}
     return NULL;
 }
 
-SlaveGetCommand *channel_getTextGetCmd(Channel *channel, const char *cmd){
+SlaveGetCommand *channel_getTextGetCmd(Channel *channel, int cmd){
 	FORLISTN(channel->tgcmd_list, j){
 		SlaveGetCommand *item = &channel->tgcmd_list.item[j];
-		if(strncmp(cmd, item->name, SLAVE_CMD_MAX_SIZE) == 0){
+		if(cmd == item->id){
 		   return item;
 		}
 	}
     return NULL;
 }
 
-SlaveSetCommand *channel_getSetCmd(Channel *channel, const char *cmd){
+SlaveSetCommand *channel_getSetCmd(Channel *channel, int cmd){
 	FORLISTN(channel->scmd_list, j){
 		SlaveSetCommand *item = &channel->scmd_list.item[j];
-		if(strncmp(cmd, item->name, SLAVE_CMD_MAX_SIZE) == 0){
+		if(cmd == item->id){
 		   return item;
 		}
 	}

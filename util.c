@@ -134,9 +134,9 @@ void printData ( int fd ) {
 		Channel *channel = &channel_list.item[i];
 		FORLISTN(channel->igcmd_list, j){
 			SlaveIntervalGetCommand *item = &channel->igcmd_list.item[j];
-	        snprintf ( q, sizeof q, "|%11d|%11s|%11ld|%11ld|%11d|%11s|\n",
+	        snprintf ( q, sizeof q, "|%11d|%11d|%11ld|%11ld|%11d|%11s|\n",
 	                   channel->id,
-	                   item->command.name,
+	                   item->command.id,
 	                   item->interval.tv_sec,
 	                   item->interval.tv_nsec,
 	                   item->command.result,
@@ -158,9 +158,9 @@ void printData ( int fd ) {
 		Channel *channel = &channel_list.item[i];
 		FORLISTN(channel->gcmd_list, j){
 			SlaveGetCommand *item = &channel->gcmd_list.item[j];
-	        snprintf ( q, sizeof q, "|%11d|%16s|\n",
+	        snprintf ( q, sizeof q, "|%11d|%16d|\n",
 	                   channel->id,
-	                   item->name                 
+	                   item->id                 
 	                 );
 	        SEND_STR ( q )
 		}
@@ -178,9 +178,9 @@ void printData ( int fd ) {
 		Channel *channel = &channel_list.item[i];
 		FORLISTN(channel->scmd_list, j){
 			SlaveSetCommand *item = &channel->scmd_list.item[j];
-	        snprintf ( q, sizeof q, "|%11d|%16s|\n",
+	        snprintf ( q, sizeof q, "|%11d|%16d|\n",
 	                   channel->id,
-	                   item->name                 
+	                   item->id                 
 	                 );
 	        SEND_STR ( q )
 		}

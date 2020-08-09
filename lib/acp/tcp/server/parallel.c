@@ -37,9 +37,9 @@ void *serverm_connThreadFunction ( void *arg ) {
             NANOSLEEP(0,1000000);
             break;
         case SERVERM_BUSY:{
-			//printdo("SERVERM_BUSY %zu\n", connection->id);
-         //   puts ( "\n\n" );
-         //   printf ( "connection is busy %d\n", connection->id );
+			printdo("SERVERM_BUSY %zu\n", connection->id);
+            puts ( "\n\n" );
+           printf ( "connection is busy %d\n", connection->id );
 	        int old_state;
 	        if ( threadCancelDisable ( &old_state ) ) {
 	            lockMutex ( &connection->mutex ) ;
