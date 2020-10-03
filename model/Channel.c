@@ -1,5 +1,13 @@
 #include "Channel.h"
 
+int channel_RUN(Channel *item, int fd);
+
+int channel_OFF(Channel *item, int fd);
+
+int channel_FAILURE(Channel *item, int fd);
+
+int channel_INIT(Channel *item, int fd);
+
 int channel_check ( Channel *item ) {
     int success = 1;
     if ( 0 ) {
@@ -14,10 +22,7 @@ void channelList_free (ChannelList *list){
         FORLISTN(LIi.igcmd_list, j){
             sigc_free(&LIi.igcmd_list.item[j]);
         }
-        FREE_LIST(&LIi.gcmd_list);
-        FREE_LIST(&LIi.tgcmd_list);
         FREE_LIST(&LIi.igcmd_list);
-        FREE_LIST(&LIi.scmd_list);
 		freeMutex ( &LIi.mutex );
 	}
 	FREE_LIST(list);
@@ -30,43 +35,13 @@ void channel_resetData(Channel *item){
 	}
 	item->thread = NULL;
 	item->retry = 0;
-	item->state = INIT;
+	item->control = channel_INIT;
 	unlockMutex(&item->mutex);
 }
 
 SlaveGetCommand *channel_getIntervalGetCmd(Channel *channel, int cmd){
 	FORLISTN(channel->igcmd_list, j){
 		SlaveGetCommand *item = &channel->igcmd_list.item[j].command;
-		if(cmd == item->id){
-		   return item;
-		}
-	}
-    return NULL;
-}
-
-SlaveGetCommand *channel_getGetCmd(Channel *channel, int cmd){
-	FORLISTN(channel->gcmd_list, j){
-		SlaveGetCommand *item = &channel->gcmd_list.item[j];
-		if(cmd == item->id){
-		   return item;
-		}
-	}
-    return NULL;
-}
-
-SlaveGetCommand *channel_getTextGetCmd(Channel *channel, int cmd){
-	FORLISTN(channel->tgcmd_list, j){
-		SlaveGetCommand *item = &channel->tgcmd_list.item[j];
-		if(cmd == item->id){
-		   return item;
-		}
-	}
-    return NULL;
-}
-
-SlaveSetCommand *channel_getSetCmd(Channel *channel, int cmd){
-	FORLISTN(channel->scmd_list, j){
-		SlaveSetCommand *item = &channel->scmd_list.item[j];
 		if(cmd == item->id){
 		   return item;
 		}
@@ -171,33 +146,15 @@ int channelList_init ( ChannelList *list, int max_retry, const char *config_path
         return 0;
     }
     for ( int i = 0; i < LML; i++ ) {
-		LIST_RESET(&LIi.gcmd_list)
-        LIST_RESET(&LIi.tgcmd_list)
         LIST_RESET(&LIi.igcmd_list)
-        LIST_RESET(&LIi.scmd_list)
 	}
     for ( int i = 0; i < LML; i++ ) {
         LIi.id = TSVgetis ( r, i, "id" );
-        char *get_file = TSVgetvalues ( r, i, "get" );
-        char *tget_file = TSVgetvalues ( r, i, "tget" );
         char *iget_file = TSVgetvalues ( r, i, "iget" );
-        char *set_file = TSVgetvalues ( r, i, "set" );
         if ( TSVnullreturned ( r ) ) {
             break;
         }
-        if(!sgcList_init(&LIi.gcmd_list, get_dir, get_file, file_type)){
-			TSVclear ( r );
-            goto failed;
-        }
-        if(!sgcList_init(&LIi.tgcmd_list, tget_dir, tget_file, file_type)){
-			TSVclear ( r );
-            goto failed;
-        }
         if(!sigcList_init(&LIi.igcmd_list, iget_dir, iget_file, file_type)){
-			TSVclear ( r );
-            goto failed;
-        }
-        if(!sscList_init(&LIi.scmd_list, set_dir, set_file, file_type)){
 			TSVclear ( r );
             goto failed;
         }
@@ -211,7 +168,7 @@ int channelList_init ( ChannelList *list, int max_retry, const char *config_path
     FORLi{
 		LIi.thread = NULL;
 		LIi.max_retry = max_retry;
-		LIi.state = INIT;
+		LIi.control = channel_INIT;
 		if ( !initMutex ( &LIi.mutex ) ) {
 	        putsde ( "failed to initialize channel mutex\n" );
 	        goto failed;
@@ -226,43 +183,61 @@ int channelList_init ( ChannelList *list, int max_retry, const char *config_path
     return 0;
 }
 
-int channel_control(Channel *item, int fd){
+void channel_setThread(Channel *item, struct sthread_st *thread){
+	item->thread = thread;
+}
+
+void channel_start(Channel *item){
+	item->control = channel_INIT;
+}
+
+const char *channel_getStateStr(Channel *item){
+	if(item->control == channel_RUN) return "RUN";
+	else if(item->control == channel_OFF) return "OFF";
+	else if(item->control == channel_FAILURE) return "FAILURE";
+	else if(item->control == channel_INIT) return "INIT";
+	return "?";
+}
+
+int channel_RUN(Channel *item, int fd){
 	int r = 1;
 	lockMutex(&item->mutex);
-	switch ( item->state ) {
-		case RUN:
-			if(item->thread == NULL){
-				item->state = OFF;
-				printde ( "channel: self disabled, id=%d\n", item->id );
-				break;
+	if(item->thread == NULL){
+		item->control = channel_OFF;
+		printde ( "channel: self disabled, id=%d\n", item->id );
+		goto done;
+	}
+	FORLISTN(item->igcmd_list, i){
+		r = sigc_control(&item->igcmd_list.item[i], fd, &item->thread->mutex, item->id );
+		if(r == ACP_ERROR_CONNECTION){
+			if(item->retry < item->max_retry){
+				item->retry++;
+			}else{
+				goto done;
 			}
-	        FORLISTN(item->igcmd_list, i){
-	            r = sigc_control(&item->igcmd_list.item[i], fd, &item->thread->mutex, item->id );
-	            if(r == ACP_ERROR_CONNECTION){
-	                if(item->retry < item->max_retry){
-	                    item->retry++;
-	                }else{
-						break;
-					}
-	            }else{
-	                item->retry = 0;
-	            }
-	        }
-	        break;
-		case OFF:
-	        break;
-	    case FAILURE:
-	        break;
-	    case INIT:
-		    item->retry = 0;
-	        item->state = RUN;
-	        break;
-	    default:
-	        break;
-    }
-    unlockMutex(&item->mutex);
+		}else{
+			item->retry = 0;
+		}
+	}
+	done:
+	unlockMutex(&item->mutex);
     return r;
-    
+}
+
+int channel_OFF(Channel *item, int fd){
+    return 1;
+}
+
+int channel_FAILURE(Channel *item, int fd){
+    return 1;
+}
+
+int channel_INIT(Channel *item, int fd){
+	lockMutex(&item->mutex);
+	item->retry = 0;
+	item->control = channel_RUN;
+	unlockMutex(&item->mutex);
+    return 1;
 }
 
 #define ADC ACP_DELIMITER_COLUMN_STR

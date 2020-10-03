@@ -8,7 +8,8 @@
 //#define ACP_CMD_MAX_LENGTH 16
 #define ACP_BUF_MAX_LENGTH 256
 #define ACP_DATA_MAX_LENGTH (ACP_BUF_MAX_LENGTH - 5)
-#define ACP_PACK_MIN_LENGTH 7
+#define ACP_PACK_MIN_LENGTH 6
+#define ACP_TCP_PACK_MIN_LENGTH ACP_PACK_MIN_LENGTH - 1
 #define ACP_WBUF_MAX_LENGTH 128
 #define ACP_CRC_BUF_MAX_LENGTH 2
 #define ACP_CHANNEL_ID_STRLEN 12
@@ -21,18 +22,25 @@
 #define ACP_PACK_TIMEOUT_MS 10000UL
 #define ACP_BUSY_TIMEOUT_MS 5UL
 
-#define ACP_DELIMITER_START			'<'
-#define ACP_DELIMITER_COLUMN		';'
-#define ACP_DELIMITER_END			'>'
+#define ACP_DELIMITER_START						'<'
+#define ACP_DELIMITER_COLUMN					';'
+#define ACP_DELIMITER_END						'>'
 
-#define ACP_DELIMITER_START_STR		"<"
-#define ACP_DELIMITER_COLUMN_STR	";"
-#define ACP_DELIMITER_END_STR		">"
+#define ACP_DELIMITER_START_STR					"<"
+#define ACP_DELIMITER_COLUMN_STR				";"
+#define ACP_DELIMITER_END_STR					">"
 
-#define ACP_SIGN_REQUEST			'?'
-#define ACP_SIGN_RESPONSE			'!'
-#define ACP_SIGN_REQUEST_STR		"?"
-#define ACP_SIGN_RESPONSE_STR		"!"
+#define ACP_SIGN_REQUEST_GET					'?' //response required
+#define ACP_SIGN_REQUEST_SET					'&' //no response required 
+#define ACP_SIGN_REQUEST_GET_BROADCAST			'*' //for everyone in the net, response required
+#define ACP_SIGN_REQUEST_SET_BROADCAST			'#' //for everyone in the net, no response required
+#define ACP_SIGN_RESPONSE						'!' //response to request
+
+#define ACP_SIGN_REQUEST_GET_STR				"?"
+#define ACP_SIGN_REQUEST_SET_STR				"&"
+#define ACP_SIGN_REQUEST_GET_BROADCAST_STR		"*"
+#define ACP_SIGN_REQUEST_SET_BROADCAST_STR		"#"
+#define ACP_SIGN_RESPONSE_STR					"!"
 
 #define ACP_EMPTY_PACK_STR			ACP_DELIMITER_START_STR ACP_DELIMITER_END_STR
 
@@ -42,12 +50,20 @@
 #define ASREQ ACP_SIGN_REQUEST_STR
 #define ASRES ACP_SIGN_RESPONSE_STR
 
-#define ACP_IND_CMD 1
-#define ACP_IND_ID 2
-#define ACP_IND_PARAM1 3
-#define ACP_IND_PARAM2 4
-#define ACP_IND_PARAM3 5
-#define ACP_IND_PARAM4 6
+#define ACP_IND_SIGN				1
+
+#define ACP_REQUEST_IND_CMD			1
+#define ACP_REQUEST_IND_ID			2
+#define ACP_REQUEST_IND_PARAM1		3
+#define ACP_REQUEST_IND_PARAM2		4
+#define ACP_REQUEST_IND_PARAM3		5
+#define ACP_REQUEST_IND_PARAM4		6
+
+#define ACP_RESPONSE_IND_ID			1
+#define ACP_RESPONSE_IND_PARAM1		2
+#define ACP_RESPONSE_IND_PARAM2		3
+#define ACP_RESPONSE_IND_PARAM3		4
+#define ACP_RESPONSE_IND_PARAM4		5
 
 enum ACPResultE {
 	ACP_BUSY,

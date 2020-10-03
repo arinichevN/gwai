@@ -11,8 +11,6 @@ static Mutex serial_thread_list_mutex = MUTEX_INITIALIZER;
 static SerialThreadStarter serial_thread_starter;
 static SerialThreadLList serial_thread_list = LLIST_INITIALIZER;
 static ChannelList channel_list = LIST_INITIALIZER;
-static SlaveBGetCommandList bgcmd_list = LIST_INITIALIZER;//broadcast
-static SlaveSetCommandList bscmd_list = LIST_INITIALIZER;//broadcast
 
 #include "model/SlaveGetCommand.c"
 #include "model/SlaveSetCommand.c"
@@ -76,18 +74,7 @@ int initData() {
         channelList_free ( &channel_list );
         goto failed;
     }
-    if(!sbgcList_init(&bgcmd_list, BROADCAST_GET_CONFIG_FILE)){
-		channelList_free ( &channel_list );
-        goto failed;
-	}
-	if(!sscList_init(&bscmd_list, BROADCAST_CONFIG_DIR, BROADCAST_SET_CONFIG_FILE, CONF_FILE_TYPE)){
-		FREE_LIST(&bgcmd_list);
-		channelList_free ( &channel_list );
-        goto failed;
-	}
     if ( !sts_init ( &serial_thread_starter, max_retry ) ) {
-		FREE_LIST(&bgcmd_list);
-		FREE_LIST(&bscmd_list);
 		channelList_free ( &channel_list );
         goto failed;
     }
@@ -98,8 +85,6 @@ failed:
 
 void freeData() {
 	STOP_ALL_LLIST_THREADS(&serial_thread_list, SerialThread)
-	FREE_LIST(&bgcmd_list);
-	FREE_LIST(&bscmd_list);
 	channelList_free ( &channel_list );
 	stList_free ( &serial_thread_list );
 	sts_free(&serial_thread_starter);

@@ -62,7 +62,10 @@ int acpserial_addCRC(char *buf, size_t buf_len){
 
 int acpserial_tcpToSerial(char *buf, size_t buf_len){
 	size_t l1 = strlen(buf);
-	if(l1 < ACP_PACK_MIN_LENGTH - 1) return 0;
+	if(l1 < ACP_TCP_PACK_MIN_LENGTH) {
+		printde("short package: buf: %s real: %zd, min required: %u\n", buf, l1 , ACP_PACK_MIN_LENGTH - 1);
+		return 0;
+	}
 	buf[l1-1] = ACP_DELIMITER_COLUMN;
 	return acpserial_addCRC(buf, buf_len);
 }
@@ -201,31 +204,31 @@ int acpserial_sendTcpPack(int fd, char *pack_str){printdo("tcp pack: %s\n", pack
 	return acpserial_send ( pack_str, fd );
 }
 
-int acpserial_sendChCmd(int fd, int channel_id, int cmd){
+int acpserial_sendChCmd(int fd, char sign, int cmd, int channel_id){
 	size_t blen=40;
 	char buf[blen];
-	acpserial_buildPackII(buf, blen, ACP_SIGN_REQUEST, cmd, channel_id);
+	acpserial_buildPackII(buf, blen, sign, cmd, channel_id);
 	return acpserial_send ( buf, fd );
 }
 
-int acpserial_sendChCmdF1(int fd, int channel_id, int cmd, double v){
+int acpserial_sendChCmdF1(int fd, char sign, int cmd, int channel_id, double v){
 	size_t blen=64;
 	char buf[blen];
-	acpserial_buildPackIIF(buf, blen, ACP_SIGN_REQUEST, cmd, channel_id, v);
+	acpserial_buildPackIIF(buf, blen, sign, cmd, channel_id, v);
 	return acpserial_send ( buf, fd );
 }
 
-int acpserial_sendChCmdI1(int fd, int channel_id, int cmd, int v){
+int acpserial_sendChCmdI1(int fd, char sign, int cmd, int channel_id, int v){
 	size_t blen=64;
 	char buf[blen];
-	acpserial_buildPackIII(buf, blen, ACP_SIGN_REQUEST, cmd, channel_id, v);
+	acpserial_buildPackIII(buf, blen, sign, cmd, channel_id, v);
 	return acpserial_send ( buf, fd );
 }
 
-int acpserial_sendChCmdStr(int fd, int channel_id, int cmd, const char *v){
+int acpserial_sendChCmdStr(int fd, char sign, int cmd, int channel_id, const char *v){
 	size_t blen=64;
 	char buf[blen];
-	acpserial_buildPackIIS(buf, blen, ACP_SIGN_REQUEST, cmd, channel_id, v);
+	acpserial_buildPackIIS(buf, blen, sign, cmd, channel_id, v);
 	return acpserial_send ( buf, fd );
 }
 

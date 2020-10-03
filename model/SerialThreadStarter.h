@@ -9,7 +9,7 @@
 #include "SerialThread.h"
 
 //SerialThreadStarter creates SerialThread for each detected serial port
-typedef struct {
+typedef struct sts_st{
 	DIR *dfd;
 	char *dir;
 	char serial_pattern[LINE_SIZE];
@@ -18,13 +18,14 @@ typedef struct {
 	struct timespec thread_cd;
 	int max_retry;
 	
-	int state;
+	void (*control)(struct sts_st *item);
 	pthread_t thread;
 } SerialThreadStarter;
 
 
 extern int sts_init(SerialThreadStarter *item, int max_retry);
 extern void sts_free(SerialThreadStarter *item);
-
+extern const char *sts_getStateStr(SerialThreadStarter *item);
+#define sts_control(item) (item)->control(item)
 
 #endif

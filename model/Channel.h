@@ -8,16 +8,13 @@
 
 #define CH_SLEEP_BEFORE_READ_SLAVE NANOSLEEP(0,100000000);
 
-typedef struct {
+typedef struct channel_st{
    int id;
    SlaveIntervalGetCommandList igcmd_list;
-   SlaveGetCommandList gcmd_list;
-   SlaveGetCommandList tgcmd_list;
-   SlaveSetCommandList scmd_list;
    struct sthread_st *thread;
    int max_retry;
    int retry;
-   int state;
+   int (*control)(struct channel_st *, int);
    Mutex mutex;
 } Channel;
 DEC_LIST(Channel)
@@ -30,12 +27,15 @@ struct channelptr_st{
 DEC_LIST(ChannelPtr)
 DEC_LLIST(ChannelPtr)
 
+#define channel_control(ITEM, FD) (ITEM)->control(ITEM, FD)
 extern void channel_resetData(Channel *item);
-extern int channel_control(Channel *item, int fd);
 extern SlaveGetCommand *channel_getIntervalGetCmd(Channel *channel, int cmd);
 extern SlaveGetCommand *channel_getGetCmd(Channel *channel, int cmd);
 extern SlaveGetCommand *channel_getTextGetCmd(Channel *channel, int cmd);
 extern SlaveSetCommand *channel_getSetCmd(Channel *channel, int cmd);
+extern void channel_setThread(Channel *item, struct sthread_st *thread);
+extern void channel_start(Channel *item);
+extern const char *channel_getStateStr(Channel *item);
 extern int channel_slaveToClient (Channel *channel, char *pack_str, int tcp_fd);
 extern int channel_slaveToClientText (Channel *channel, char *pack_str, int tcp_fd);
 extern int channel_sendRawDataToSlave (Channel *channel, char *pack_str);

@@ -6,6 +6,10 @@ extern SerialThreadLList serial_thread_list;
 extern ChannelList channel_list;
 extern Mutex serial_thread_list_mutex;
 
+void sts_INIT(SerialThreadStarter *item);
+void sts_SEARCH_PATH(SerialThreadStarter *item);
+void sts_SEARCH_NEED(SerialThreadStarter *item);
+
 static int hasUnconnectedChannels(ChannelList *list){
 	int out = 0;
 	FORLi{
@@ -22,7 +26,7 @@ static int hasUnconnectedChannels(ChannelList *list){
 
 static int fileIsUsed(SerialThreadLList *list, char *path){
 	FORLLi(SerialThread){
-		if(item->state != TERMINATED && (strcmp(item->serial_path, path) == 0)){
+		if(!st_isTerminated(item) && (strcmp(item->serial_path, path) == 0)){
 			return 1;
 		}
 	}
@@ -50,54 +54,103 @@ static void prepPort(int fd){
     NANOSLEEP(0,100000000);
 }
 
-
-static void sts_control(SerialThreadStarter *item){
-	switch(item->state){
-		case SEARCH_NEED://putsdo("TS SEARCH_NEED\n");
-			if(hasUnconnectedChannels(&channel_list)){
-				item->state = SEARCH_PATH;
-			}
-			break;
-		case SEARCH_PATH:{//putsdo("TS SEARCH_PATH\n");
-			item->state = SEARCH_NEED;
-			struct dirent *dp;
-			while ((dp = readdir(item->dfd)) != NULL)	{
-				char *ret = strstr(dp->d_name, item->serial_pattern);	
-				if(ret != NULL){		
-					char filename[LINE_SIZE*2] ;
-					snprintf( filename, sizeof filename, "%s/%s", item->dir, dp->d_name) ;
-					//printdo("TS port found: %s\n", filename);
-					if(!fileIsUsed(&serial_thread_list, filename)){
-						int fd;
-						if (!serial_init(&fd, filename, item->serial_rate, item->serial_config)) {
-					        printde("failed to initialize serial:%s at rate %d\n", filename, item->serial_rate);
-					        continue;
-					    }
-					    printdo("serial opened: %s %d %s\n", filename, item->serial_rate, item->serial_config);
-					    printdo("TS starting thread for port: %s\n", filename);
-                        prepPort(fd);
-					    startSerialThread(fd, item->thread_cd, filename, item->serial_rate, item->max_retry, &channel_list, &serial_thread_list, &serial_thread_list_mutex);
-					}else{
-						//putsdo("TS we have already thread for this file\n");
-					}
-				}
-			}
-			rewinddir(item->dfd);
-			}
-			break;
-		case INIT:puts("TS INIT");
-			item->dir = "/dev";
-			if ((item->dfd = opendir(item->dir)) == NULL) {
-				printde("can't open %s\n", item->dir);
-				return;
-			}
-			item->state = SEARCH_NEED;
-			break;
-		default:
-			putsde("bad thread starter state\n");
-			break;
+void sts_SEARCH_NEED(SerialThreadStarter *item){
+	if(hasUnconnectedChannels(&channel_list)){
+		item->control = sts_SEARCH_PATH;
 	}
 }
+
+void sts_SEARCH_PATH(SerialThreadStarter *item){
+	item->control = sts_SEARCH_NEED;
+	struct dirent *dp;
+	while ((dp = readdir(item->dfd)) != NULL){
+		char *ret = strstr(dp->d_name, item->serial_pattern);
+		if(ret != NULL){
+			char filename[LINE_SIZE*2] ;
+			snprintf( filename, sizeof filename, "%s/%s", item->dir, dp->d_name) ;
+			//printdo("TS port found: %s\n", filename);
+			if(!fileIsUsed(&serial_thread_list, filename)){
+				int fd;
+				if (!serial_init(&fd, filename, item->serial_rate, item->serial_config)) {
+			        printde("failed to initialize serial:%s at rate %d\n", filename, item->serial_rate);
+			        continue;
+			    }
+			    printdo("serial opened: %s %d %s\n", filename, item->serial_rate, item->serial_config);
+			    printdo("TS starting thread for port: %s\n", filename);
+				prepPort(fd);
+			    startSerialThread(fd, item->thread_cd, filename, item->serial_rate, item->max_retry, &channel_list, &serial_thread_list, &serial_thread_list_mutex);
+			}else{
+				//putsdo("TS we have already thread for this file\n");
+			}
+		}
+	}
+	rewinddir(item->dfd);
+}
+
+void sts_INIT(SerialThreadStarter *item){
+	puts("TS INIT");
+	item->dir = "/dev";
+	if ((item->dfd = opendir(item->dir)) == NULL) {
+		printde("can't open %s\n", item->dir);
+		return;
+	}
+	item->control = sts_SEARCH_NEED;
+}
+
+const char *sts_getStateStr(SerialThreadStarter *item){
+	if(item->control == sts_SEARCH_NEED) return "SEARCH_NEED";
+	else if(item->control == sts_SEARCH_PATH) return "SEARCH_PATH";
+	else if(item->control == sts_INIT) return "INIT";
+	return "?";
+}
+
+//static void sts_control(SerialThreadStarter *item){
+	//switch(item->state){
+		//case SEARCH_NEED://putsdo("TS SEARCH_NEED\n");
+			//if(hasUnconnectedChannels(&channel_list)){
+				//item->control = sts_SEARCH_PATH;
+			//}
+			//break;
+		//case SEARCH_PATH:{//putsdo("TS SEARCH_PATH\n");
+			//item->control = sts_SEARCH_NEED;
+			//struct dirent *dp;
+			//while ((dp = readdir(item->dfd)) != NULL)	{
+				//char *ret = strstr(dp->d_name, item->serial_pattern);	
+				//if(ret != NULL){		
+					//char filename[LINE_SIZE*2] ;
+					//snprintf( filename, sizeof filename, "%s/%s", item->dir, dp->d_name) ;
+					////printdo("TS port found: %s\n", filename);
+					//if(!fileIsUsed(&serial_thread_list, filename)){
+						//int fd;
+						//if (!serial_init(&fd, filename, item->serial_rate, item->serial_config)) {
+					        //printde("failed to initialize serial:%s at rate %d\n", filename, item->serial_rate);
+					        //continue;
+					    //}
+					    //printdo("serial opened: %s %d %s\n", filename, item->serial_rate, item->serial_config);
+					    //printdo("TS starting thread for port: %s\n", filename);
+                        //prepPort(fd);
+					    //startSerialThread(fd, item->thread_cd, filename, item->serial_rate, item->max_retry, &channel_list, &serial_thread_list, &serial_thread_list_mutex);
+					//}else{
+						////putsdo("TS we have already thread for this file\n");
+					//}
+				//}
+			//}
+			//rewinddir(item->dfd);
+			//}
+			//break;
+		//case INIT:puts("TS INIT");
+			//item->dir = "/dev";
+			//if ((item->dfd = opendir(item->dir)) == NULL) {
+				//printde("can't open %s\n", item->dir);
+				//return;
+			//}
+			//item->control = sts_SEARCH_NEED;
+			//break;
+		//default:
+			//putsde("bad thread starter state\n");
+			//break;
+	//}
+//}
 
 #ifdef MODE_DEBUG
 void sts_cleanup_handler ( void *arg ) {
@@ -128,7 +181,7 @@ int sts_init(SerialThreadStarter *item, int max_retry){
 	item->dfd = NULL;
 	item->dir = "/dev";
 	item->max_retry = max_retry;
-	item->state = INIT;
+	item->control = sts_INIT;
 	if ( !createMThread ( &item->thread, &sts_main, item ) ) {
 		free ( item );
 		return 0;

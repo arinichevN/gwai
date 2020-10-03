@@ -73,7 +73,7 @@ void printData ( int fd ) {
     SEND_STR ( "|   state   | serial_pattern |serial_rate|serial_conf|    cd_s   |   cd_ns   |\n" )
     SEND_STR ( "+-----------+----------------+-----------+-----------+-----------+-----------+\n" )
 	snprintf ( q, sizeof q, "|%11s|%16s|%11d|%11s|%11ld|%11ld|\n",
-	   getStateStr(serial_thread_starter.state),
+	   sts_getStateStr(&serial_thread_starter),
 	   serial_thread_starter.serial_pattern,
 	   serial_thread_starter.serial_rate,
 	   serial_thread_starter.serial_config,
@@ -91,7 +91,7 @@ void printData ( int fd ) {
     FOREACH_LLIST(item, &serial_thread_list, SerialThread) {
         snprintf ( q, sizeof q, "|%14p|%13s|%11ld|%11ld|%16s|%11d|%11d|%11d|\n",
                    (void *)item,
-                   getStateStr(item->state),
+                   st_getStateStr(item),
                    item->cycle_duration.tv_sec,
                    item->cycle_duration.tv_nsec,
                    item->serial_path,
@@ -113,7 +113,7 @@ void printData ( int fd ) {
         snprintf ( q, sizeof q, "|%11d|%14p|%11s|%11d|%11d|\n",
                    item->id,
                    (void *)item->thread,
-                   getStateStr(item->state),
+                   channel_getStateStr(item),
                    item->retry,
                    item->max_retry
                  );
@@ -140,52 +140,13 @@ void printData ( int fd ) {
 	                   item->interval.tv_sec,
 	                   item->interval.tv_nsec,
 	                   item->command.result,
-	                   getStateStr(item->state)
+	                   sigc_getStateStr(item)
 	                 );
 	        SEND_STR ( q )
 		}
 	}
 	SEND_STR ( "+-----------+-----------+-----------+-----------+-----------+-----------+\n" )
 	
-	SEND_STR ( "+----------------------------+\n" )
-    SEND_STR ( "|           channel          |\n" )
-    SEND_STR ( "|           +----------------+\n" )
-    SEND_STR ( "|           |  slave get cmd |\n" )
-    SEND_STR ( "+-----------+----------------+\n" )
-    SEND_STR ( "|     id    |       cmd      |\n" )
-    SEND_STR ( "+-----------+----------------+\n" )
-    FORLISTN ( channel_list, i ) {
-		Channel *channel = &channel_list.item[i];
-		FORLISTN(channel->gcmd_list, j){
-			SlaveGetCommand *item = &channel->gcmd_list.item[j];
-	        snprintf ( q, sizeof q, "|%11d|%16d|\n",
-	                   channel->id,
-	                   item->id                 
-	                 );
-	        SEND_STR ( q )
-		}
-	}
-	SEND_STR ( "+-----------+----------------+\n" )
-
-	SEND_STR ( "+----------------------------+\n" )
-    SEND_STR ( "|           channel          |\n" )
-    SEND_STR ( "|           +----------------+\n" )
-    SEND_STR ( "|           |  slave set cmd |\n" )
-    SEND_STR ( "+-----------+----------------+\n" )
-    SEND_STR ( "|     id    |       cmd      |\n" )
-    SEND_STR ( "+-----------+----------------+\n" )
-    FORLISTN ( channel_list, i ) {
-		Channel *channel = &channel_list.item[i];
-		FORLISTN(channel->scmd_list, j){
-			SlaveSetCommand *item = &channel->scmd_list.item[j];
-	        snprintf ( q, sizeof q, "|%11d|%16d|\n",
-	                   channel->id,
-	                   item->id                 
-	                 );
-	        SEND_STR ( q )
-		}
-	}
-	SEND_STR ( "+-----------+----------------+\n" )
 	
 	
 	SEND_STR ( "+--------------------------+\n" )

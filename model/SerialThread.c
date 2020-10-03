@@ -1,5 +1,10 @@
 #include "SerialThread.h"
 
+void st_RUN(SerialThread *item);
+void st_FIND_CHANNELS(SerialThread *item);
+void st_TERMINATED(SerialThread *item);
+void st_INIT(SerialThread *item);
+
 void st_free ( SerialThread *item ) {
 //puts("stoping serial threads...");
 //	STOP_THREAD(item->thread)
@@ -29,13 +34,13 @@ void st_reset(SerialThread *item){
 		channel_resetData(channel);
 	}
 	LLIST_RESET(&item->channelptr_llist);
-	item->state = TERMINATED;
+	item->control = st_TERMINATED;
 	printdo("SERIAL THREAD %d TERMINATED\n", item->id);
 }
 
 SerialThread *stList_getIdleThread(SerialThreadLList *list){
 	FORLLi(SerialThread){
-		if(item->state == TERMINATED){
+		if(item->control == st_TERMINATED){
 			return item;
 		}
 	}
@@ -50,7 +55,7 @@ void st_setParam(SerialThread *item, char *serial_path, int fd, int serial_rate,
 }
 
 void st_start(SerialThread *item){
-	item->state = INIT;				
+	item->control = st_INIT;
 }
 
 int st_addToList (SerialThreadLList *list, Mutex *list_mutex, SerialThread *item ) {
@@ -161,18 +166,24 @@ ChannelPtr * st_deleteChannelPtr (SerialThread *thread, ChannelPtr *item) {
 
 int st_assignChannelToThread(SerialThread *thread, int ind ){
 	ChannelPtr *item = &thread->channelptr_list.item[ind];
-	item->item->thread = thread;
-	item->item->state = INIT;
+	channel_setThread(item->item, thread);
+	channel_start(item->item);
 	if(st_addChannelPtr(item, &thread->channelptr_llist, &thread->channelptr_list)){
 		return 1;
 	}
 	return 0;
 }
 
+int st_isTerminated(SerialThread *thread){
+	if(thread->control == st_TERMINATED){
+		return 1;
+	}
+	return 0;
+}
 
 int st_channelExists (int channel_id, int fd, Mutex *mutex) {
 	lockMutex(mutex);
-	int r = acpserial_sendChCmd (fd, channel_id, CMD_GET_ID_EXISTS);
+	int r = acpserial_sendChCmd (fd, ACP_SIGN_REQUEST_GET, CMD_GET_ID_EXISTS, channel_id);
 	if(r == ACP_ERROR_CONNECTION){
 		unlockMutex(mutex);
 		return r;
@@ -254,78 +265,157 @@ void st_searchNAddUnconnectedChannel(SerialThread *thread) {
 	}
 }
 
-void st_control(SerialThread *item){
-	switch(item->state){
-		case RUN:{//printdo("SERIAL THREAD %d RUN\n", item->id);
-			st_searchNAddUnconnectedChannel(item);
-            FOREACH_LLIST (channelptr, &item->channelptr_llist, ChannelPtr ) {
-				Channel *channel = channelptr->item;
-                int r = channel_control(channel, item->fd);
-                if(r==ACP_ERROR_CONNECTION){
+void st_RUN(SerialThread *item){
+	st_searchNAddUnconnectedChannel(item);
+	FOREACH_LLIST (channelptr, &item->channelptr_llist, ChannelPtr ) {
+		Channel *channel = channelptr->item;
+		int r = channel_control(channel, item->fd);
+		if(r==ACP_ERROR_CONNECTION){
+			st_reset(item);
+			return;
+		}
+		if(r == ACP_ERROR_NO_RESPONSE){
+			channel_resetData(channel);
+			st_deleteChannelPtr (item, channelptr);
+			printdo("deleting channel id=%d from serial thread id=%d\n", channel->id, item->id);
+		}
+	}
+	putsdo("");
+}
+
+void st_FIND_CHANNELS(SerialThread *item){
+	printdo("SERIAL THREAD %d FIND_CHANNELS\n", item->id);
+	//{int r = serial_canWrite(item->fd, 3000);
+		//if(!r){sthreadReset(item);
+			//return;}
+		//r= serial_canRead(item->fd, 3000);
+		//if(!r){sthreadReset(item);
+			//return;}
+	//}
+	FORLISTN(item->channelptr_list, i){
+		Channel *channel = item->channelptr_list.item[i].item;
+		lockMutex(&channel->mutex);
+		if(channel->thread == NULL){//unconnected channel
+			int r = st_channelExists( channel->id, item->fd, &item->mutex);
+			//int r = 1;
+			if(r==ACP_ERROR_NO_RESPONSE){
+				printdo("channel id=%d not found on serial port id=%d\n", channel->id, item->id);
+				unlockMutex(&channel->mutex);
+				continue;
+			}
+			if(r==ACP_ERROR_CONNECTION){
+				if(item->retry < item->max_retry){
+					item->retry++;
+				}else{
+					unlockMutex(&channel->mutex);
 					st_reset(item);
 					return;
+					//continue;
 				}
-				if(r == ACP_ERROR_NO_RESPONSE){
-					channel_resetData(channel);
-					st_deleteChannelPtr (item, channelptr);
-					printdo("deleting channel id=%d from serial thread id=%d\n", channel->id, item->id);
-				}
-            }
-            putsdo("");
-			break;}
-		case FIND_CHANNELS:printdo("SERIAL THREAD %d FIND_CHANNELS\n", item->id);
-			//{int r = serial_canWrite(item->fd, 3000);
-				//if(!r){sthreadReset(item);
-					//return;}
-				//r= serial_canRead(item->fd, 3000);
-				//if(!r){sthreadReset(item);
-					//return;}
-			//}
-			FORLISTN(item->channelptr_list, i){
-				Channel *channel = item->channelptr_list.item[i].item;
-				lockMutex(&channel->mutex);
-				if(channel->thread == NULL){//unconnected channel
-					int r = st_channelExists( channel->id, item->fd, &item->mutex);
-					//int r = 1;
-					if(r==ACP_ERROR_NO_RESPONSE){
-						printdo("channel id=%d not found on serial port id=%d\n", channel->id, item->id);
-						unlockMutex(&channel->mutex);
-						continue;
-					}
-					if(r==ACP_ERROR_CONNECTION){
-						if(item->retry < item->max_retry){
-							item->retry++;
-						}else{
-							unlockMutex(&channel->mutex);
-							st_reset(item);
-							return;
-							//continue;
-						}
-					}else{
-						item->retry = 0;
-					}
-					if(r == ACP_SUCCESS){
-						st_assignChannelToThread(item, i);
-					}
-				}
-				unlockMutex(&channel->mutex);
+			}else{
+				item->retry = 0;
 			}
-			if(item->channelptr_llist.length > 0){
-				item->state = RUN;
+			if(r == ACP_SUCCESS){
+				st_assignChannelToThread(item, i);
 			}
-			break;
-		case INIT:printf("SERIAL THREAD %d INIT\n", item->id);
-			item->chpl_ind = 0;
-			LLIST_RESET(&item->channelptr_llist);
-		    item->state = FIND_CHANNELS;
-			break;
-		case TERMINATED:
-			break;
-		default:
-			printde("bad state where thread.id = %d\n", item->id);
-			break;
+		}
+		unlockMutex(&channel->mutex);
+	}
+	if(item->channelptr_llist.length > 0){
+		item->control = st_RUN;
 	}
 }
+
+void st_TERMINATED(SerialThread *item){
+	;
+}
+
+void st_INIT(SerialThread *item){
+	item->chpl_ind = 0;
+	LLIST_RESET(&item->channelptr_llist);
+    item->control = st_FIND_CHANNELS;
+}
+
+const char *st_getStateStr(SerialThread *item){
+	if(item->control == st_RUN) return "RUN";
+	else if(item->control == st_TERMINATED) return "TERMINATED";
+	else if(item->control == st_FIND_CHANNELS) return "FIND_CHANNELS";
+	else if(item->control == st_INIT) return "INIT";
+	return "?";
+}
+
+//void st_control(SerialThread *item){
+	//switch(item->state){
+		//case RUN:{//printdo("SERIAL THREAD %d RUN\n", item->id);
+			//st_searchNAddUnconnectedChannel(item);
+            //FOREACH_LLIST (channelptr, &item->channelptr_llist, ChannelPtr ) {
+				//Channel *channel = channelptr->item;
+                //int r = channel_control(channel, item->fd);
+                //if(r==ACP_ERROR_CONNECTION){
+					//st_reset(item);
+					//return;
+				//}
+				//if(r == ACP_ERROR_NO_RESPONSE){
+					//channel_resetData(channel);
+					//st_deleteChannelPtr (item, channelptr);
+					//printdo("deleting channel id=%d from serial thread id=%d\n", channel->id, item->id);
+				//}
+            //}
+            //putsdo("");
+			//break;}
+		//case FIND_CHANNELS:printdo("SERIAL THREAD %d FIND_CHANNELS\n", item->id);
+			////{int r = serial_canWrite(item->fd, 3000);
+				////if(!r){sthreadReset(item);
+					////return;}
+				////r= serial_canRead(item->fd, 3000);
+				////if(!r){sthreadReset(item);
+					////return;}
+			////}
+			//FORLISTN(item->channelptr_list, i){
+				//Channel *channel = item->channelptr_list.item[i].item;
+				//lockMutex(&channel->mutex);
+				//if(channel->thread == NULL){//unconnected channel
+					//int r = st_channelExists( channel->id, item->fd, &item->mutex);
+					////int r = 1;
+					//if(r==ACP_ERROR_NO_RESPONSE){
+						//printdo("channel id=%d not found on serial port id=%d\n", channel->id, item->id);
+						//unlockMutex(&channel->mutex);
+						//continue;
+					//}
+					//if(r==ACP_ERROR_CONNECTION){
+						//if(item->retry < item->max_retry){
+							//item->retry++;
+						//}else{
+							//unlockMutex(&channel->mutex);
+							//st_reset(item);
+							//return;
+							////continue;
+						//}
+					//}else{
+						//item->retry = 0;
+					//}
+					//if(r == ACP_SUCCESS){
+						//st_assignChannelToThread(item, i);
+					//}
+				//}
+				//unlockMutex(&channel->mutex);
+			//}
+			//if(item->channelptr_llist.length > 0){
+				//item->control = st_RUN;
+			//}
+			//break;
+		//case INIT:printf("SERIAL THREAD %d INIT\n", item->id);
+			//item->chpl_ind = 0;
+			//LLIST_RESET(&item->channelptr_llist);
+		    //item->control = st_FIND_CHANNELS;
+			//break;
+		//case TERMINATED:
+			//break;
+		//default:
+			//printde("bad state where thread.id = %d\n", item->id);
+			//break;
+	//}
+//}
 
 #ifdef MODE_DEBUG
 void st_cleanup_handler ( void *arg ) {
@@ -368,7 +458,7 @@ int st_addNewToList(SerialThreadLList *list, Mutex *list_mutex, ChannelList *rli
     item->cycle_duration = cycle_duration;
     item->fd = fd;
     item->max_retry = max_retry;
-    item->state = INIT;
+    item->control = st_INIT;
     LIST_RESET(&item->channelptr_list)
     if(!st_makeChannelPtrList(item, rlist)){
 		FREE_LIST(&item->channelptr_list);

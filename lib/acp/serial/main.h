@@ -29,10 +29,10 @@ extern int acpserial_send ( const char *buf, int fd );
 extern int acpserial_readResponse(int fd, char *buf, size_t len);
 extern int acpserial_sendTcpPack(int fd, char *pack_str);
 
-extern int acpserial_sendChCmdF1(int fd, int channel_id, int cmd, double v);
-extern int acpserial_sendChCmdI1(int fd, int channel_id, int cmd, int v);
-extern int acpserial_sendChCmdStr(int fd, int channel_id, int cmd, const char *v);
-extern int acpserial_sendChCmd (int fd, int channel_id, int cmd);
+extern int acpserial_sendChCmd(int fd, char sign, int cmd, int channel_id);
+extern int acpserial_sendChCmdF1(int fd, char sign, int cmd, int channel_id, double v);
+extern int acpserial_sendChCmdI1(int fd, char sign, int cmd, int channel_id, int v);
+extern int acpserial_sendChCmdStr(int fd, char sign, int cmd, int channel_id, const char *v);
 
 extern int acpserial_extractFTS(const char *buf, size_t len, FTS *v);
 extern int acpserial_extractI2(const char *buf, size_t len, int *v1, int *v2);

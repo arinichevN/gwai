@@ -28,6 +28,9 @@
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
 
+#define CONTROL(ITEM) (ITEM)->control(ITEM)
+#define CONTROL_N(ITEM) ITEM.control(&(ITEM))
+
 #define GOOD_FLOAT 1.0
 #define BAD_FLOAT 0.0
 #define GOOD_INT 1

@@ -8,44 +8,42 @@ void sendRawDataToClient (char *data, int tcp_fd,  Mutex *mutex ) {
 }
 
 int serveChannelCmd(int SERVER_FD, int SERVER_CMD, char *buf){
-	printdo("serving request: %s\n", buf);
+	printdo("serving request for channel: %s\n", buf);
 	int channel_id;
-	if ( !acp_packGetCellInt(buf, ACP_IND_ID, &channel_id) ) {
+	if ( !acp_packGetCellInt(buf, ACP_REQUEST_IND_ID, &channel_id) ) {
 		putsde("failed to get channel id\n");
 		return 0;
 	}
 	printdo("tcp: channel_id: %d\n", channel_id);
 	Channel *channel = NULL;
 	LIST_GETBYID(channel, &channel_list, channel_id)
-	if(channel == NULL || channel->thread == NULL) return 0;
+	if(channel == NULL || channel->thread == NULL){
+		putsde("no channel or channel thread\n");
+		return 0;
+	 }
 	lockMutex(&channel->mutex);
 	if(channel->thread == NULL) goto failed;
-	SlaveGetCommand *igcmd = channel_getIntervalGetCmd(channel, SERVER_CMD);
-	if(igcmd != NULL){
-		//printdo("iget cmd %s for channel %d data %s\n", SERVER_CMD, channel->id, igcmd->data);
-		if( igcmd->result == ACP_SUCCESS ){
-			sendRawDataToClient(igcmd->data, SERVER_FD,  &igcmd->mutex);
+	
+	char sign = buf[ACP_IND_SIGN];
+	if(sign == ACP_SIGN_REQUEST_GET){
+		SlaveGetCommand *igcmd = channel_getIntervalGetCmd(channel, SERVER_CMD);
+		if(igcmd != NULL){
+			//printdo("iget cmd %s for channel %d data %s\n", SERVER_CMD, channel->id, igcmd->data);
+			if( igcmd->result == ACP_SUCCESS ){
+				sendRawDataToClient(igcmd->data, SERVER_FD,  &igcmd->mutex);
+				goto success;
+			}
+		}else{
+			//printdo("get cmd %s for channel %d\n", SERVER_CMD, channel->id);
+			channel_slaveToClient(channel, buf, SERVER_FD );
 			goto success;
 		}
-	}
-	SlaveGetCommand *gcmd = channel_getGetCmd(channel, SERVER_CMD);
-	if(gcmd != NULL){
-		//printdo("get cmd %s for channel %d\n", SERVER_CMD, channel->id);
-		channel_slaveToClient(channel, buf, SERVER_FD );
-		goto success;
-	}
-	SlaveGetCommand *tgcmd = channel_getTextGetCmd(channel, SERVER_CMD);
-	if(tgcmd != NULL){
-		//printdo("tget cmd %s for channel %d\n", SERVER_CMD, channel->id);
-		channel_slaveToClientText (channel, buf, SERVER_FD );
-		goto success;
-	}
-	SlaveSetCommand *scmd = channel_getSetCmd(channel, SERVER_CMD);
-	if(scmd != NULL){
+	}else if(sign == ACP_SIGN_REQUEST_SET){
 		//printdo("set cmd %s for channel %d\n", SERVER_CMD, channel->id);
 		channel_sendRawDataToSlave(channel, buf);
 		goto success;
 	}
+
 	failed:
 	unlockMutex(&channel->mutex);
 	putsdo("request not served\n");
@@ -98,9 +96,11 @@ int slaveToClientBroadcast (char *pack_str, int tcp_fd, SerialThreadLList *list 
 		int fd = item->fd;
 		//sending request to slave
 		lockMutex(mutex);
+		putsdo("broadcast : send to serial\n");
 		int r = acpserial_sendTcpPack(fd, pack_str);
 		if(r != ACP_SUCCESS){
 			unlockMutex(mutex);
+			putsde("failed to send\n");
 			continue;
 		}
 		//reading slave response
@@ -116,6 +116,7 @@ int slaveToClientBroadcast (char *pack_str, int tcp_fd, SerialThreadLList *list 
 		}
 		r = acpserial_checkCRC(response);
 		if(r != ACP_SUCCESS){
+			putsde("bad response crc\n");
 			continue;
 		}
 		acptcp_convertSerialPack(response);
@@ -128,14 +129,12 @@ int slaveToClientBroadcast (char *pack_str, int tcp_fd, SerialThreadLList *list 
 }
 
 int serveBroadcastCmd(int SERVER_FD, int SERVER_CMD, char *buf){
-	SlaveSetCommand *scmd = getSetCmd(SERVER_CMD, &bscmd_list);
-	if(scmd != NULL){
-		sendRawDataToSlaveBroadcast(buf, &serial_thread_list);
-		goto success;
-	}
-	SlaveBGetCommand *gcmd = sbgc_getByCmd(SERVER_CMD, &bgcmd_list);
-	if(gcmd != NULL){
+	char sign = buf[ACP_IND_SIGN];
+	if(sign == ACP_SIGN_REQUEST_GET_BROADCAST){
 		slaveToClientBroadcast (buf, SERVER_FD, &serial_thread_list);
+		goto success;
+	}else if(sign == ACP_SIGN_REQUEST_SET_BROADCAST){
+		sendRawDataToSlaveBroadcast(buf, &serial_thread_list);
 		goto success;
 	}
 	//putsdo("broadcast command not found\n");
@@ -147,7 +146,7 @@ int serveBroadcastCmd(int SERVER_FD, int SERVER_CMD, char *buf){
 
 int serveRequest(int SERVER_FD, char *buf){
 	int SERVER_CMD;
-	if ( !acp_packGetCellInt(buf, ACP_IND_CMD, &SERVER_CMD)) {
+	if ( !acp_packGetCellInt(buf, ACP_REQUEST_IND_CMD, &SERVER_CMD)) {
 		putsde("failed to get command\n");
 		return 0;
 	}

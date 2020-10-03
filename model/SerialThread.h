@@ -18,7 +18,7 @@ struct sthread_st{
 	int serial_rate;
 	int max_retry;
 	int retry;
-	int state;
+	void (*control)(struct sthread_st *);
 	ChannelPtrList channelptr_list;//links to all available channels, this list is the same for each thread, we use this links in channelptr_llist
 	ChannelPtrLList channelptr_llist;//channels beeing controlled by this thread
 	Mutex rmutex;
@@ -37,6 +37,8 @@ extern void st_setParam(SerialThread *item, char *serial_path, int fd, int seria
 extern void st_start(SerialThread *item);
 extern int st_addNewToList(SerialThreadLList *list, Mutex *list_mutex, ChannelList *rlist, int id, int max_retry, char *serial_path, int fd, int serial_rate, struct timespec cycle_duration);
 extern SerialThread *stList_getIdleThread(SerialThreadLList *list);
-
+extern const char *st_getStateStr(SerialThread *item);
+extern int st_isTerminated(SerialThread *thread);
+#define st_control(item) (item)->control(item)
 
 #endif 

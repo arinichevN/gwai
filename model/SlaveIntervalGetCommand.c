@@ -1,5 +1,10 @@
 #include "SlaveIntervalGetCommand.h"
 
+int sigc_WAIT(SlaveIntervalGetCommand *item, int fd, Mutex *smutex, int channel_id );
+int sigc_OFF(SlaveIntervalGetCommand *item, int fd, Mutex *smutex, int channel_id );
+int sigc_FAILURE(SlaveIntervalGetCommand *item, int fd, Mutex *smutex, int channel_id );
+int sigc_INIT(SlaveIntervalGetCommand *item, int fd, Mutex *smutex, int channel_id );
+
 void sigc_free(SlaveIntervalGetCommand *item){
 	freeMutex ( &item->command.mutex );
 }
@@ -56,7 +61,7 @@ int sigcList_init(SlaveIntervalGetCommandList *list, const char *dir, const char
 			putsde ( "\tfailed to initialize slave data mutex\n" );
 			return 0;
 		}
-		LIll.state = INIT;
+		LIll.control = sigc_INIT;
 		LL++;
 		//printf("init poll LL++\n");
     }
@@ -67,7 +72,7 @@ int sigcList_init(SlaveIntervalGetCommandList *list, const char *dir, const char
 
 static int channelGetRawData (int fd, Mutex *dmutex, Mutex* smutex, int channel_id, int cmd,  char *data, int len ) {
 	lockMutex(smutex);
-	int r = acpserial_sendChCmd (fd, channel_id, cmd);
+	int r = acpserial_sendChCmd (fd, ACP_SIGN_REQUEST_GET, cmd, channel_id);
 	if(r == ACP_ERROR_CONNECTION){
 		unlockMutex(smutex);
 		return r;
@@ -97,24 +102,54 @@ void sigc_reset(SlaveIntervalGetCommand *item){
 	item->command.result = 0;
 }
 
-int sigc_control(SlaveIntervalGetCommand *item, int fd, Mutex *smutex, int channel_id ) {
-    switch ( item->state ) {
-    case WAIT:
-        if ( tonr( &item->tmr ) ) {
-            item->command.result = channelGetRawData (fd, &item->command.mutex, smutex, channel_id,  item->command.id,  item->command.data, ACP_BUF_MAX_LENGTH);                    
-        }
-        break;
-	case OFF:
-        break;
-    case FAILURE:
-        break;
-    case INIT:
-        ton_setInterval ( item->interval, &item->tmr );
-        ton_reset ( &item->tmr );
-        item->state = WAIT;
-        break;
-    default:
-        break;
-    }
-    return item->command.result;
+int sigc_WAIT(SlaveIntervalGetCommand *item, int fd, Mutex *smutex, int channel_id ) {
+	if (tonr(&item->tmr)) {
+		item->command.result = channelGetRawData (fd, &item->command.mutex, smutex, channel_id,  item->command.id,  item->command.data, ACP_BUF_MAX_LENGTH);                    
+	}
+	return item->command.result;
 }
+
+int sigc_OFF(SlaveIntervalGetCommand *item, int fd, Mutex *smutex, int channel_id ) {
+	return item->command.result;
+}
+
+int sigc_FAILURE(SlaveIntervalGetCommand *item, int fd, Mutex *smutex, int channel_id ) {
+	return item->command.result;
+}
+
+int sigc_INIT(SlaveIntervalGetCommand *item, int fd, Mutex *smutex, int channel_id ) {
+	ton_setInterval ( item->interval, &item->tmr );
+	ton_reset ( &item->tmr );
+	item->control = sigc_WAIT;
+	return item->command.result;
+}
+
+const char *sigc_getStateStr(SlaveIntervalGetCommand *item){
+	if(item->control == sigc_WAIT) return "RUN";
+	else if(item->control == sigc_OFF) return "OFF";
+	else if(item->control == sigc_FAILURE) return "FAILURE";
+	else if(item->control == sigc_INIT) return "INIT";
+	return "?";
+}
+
+//int sigc_control(SlaveIntervalGetCommand *item, int fd, Mutex *smutex, int channel_id ) {
+    //switch ( item->state ) {
+    //case WAIT:
+        //if ( tonr( &item->tmr ) ) {
+            //item->command.result = channelGetRawData (fd, &item->command.mutex, smutex, channel_id,  item->command.id,  item->command.data, ACP_BUF_MAX_LENGTH);                    
+        //}
+        //break;
+	//case OFF:
+        //break;
+    //case FAILURE:
+        //break;
+    //case INIT:
+        //ton_setInterval ( item->interval, &item->tmr );
+        //ton_reset ( &item->tmr );
+        //item->control = sigc_WAIT;
+        //break;
+    //default:
+        //break;
+    //}
+    //return item->command.result;
+//}
