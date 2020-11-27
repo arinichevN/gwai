@@ -131,25 +131,3 @@ const char *sigc_getStateStr(SlaveIntervalGetCommand *item){
 	else if(item->control == sigc_INIT) return "INIT";
 	return "?";
 }
-
-//int sigc_control(SlaveIntervalGetCommand *item, int fd, Mutex *smutex, int channel_id ) {
-    //switch ( item->state ) {
-    //case WAIT:
-        //if ( tonr( &item->tmr ) ) {
-            //item->command.result = channelGetRawData (fd, &item->command.mutex, smutex, channel_id,  item->command.id,  item->command.data, ACP_BUF_MAX_LENGTH);                    
-        //}
-        //break;
-	//case OFF:
-        //break;
-    //case FAILURE:
-        //break;
-    //case INIT:
-        //ton_setInterval ( item->interval, &item->tmr );
-        //ton_reset ( &item->tmr );
-        //item->control = sigc_WAIT;
-        //break;
-    //default:
-        //break;
-    //}
-    //return item->command.result;
-//}

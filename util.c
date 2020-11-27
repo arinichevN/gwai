@@ -1,5 +1,10 @@
 #include "main.h"
 
+extern int sock_port;
+extern int conn_num;
+extern int max_retry;
+const char *getAppState();
+
 char * getStateStr ( int state ) {
     switch ( state ) {
     case OFF:
@@ -62,7 +67,7 @@ void printData ( int fd ) {
     SEND_STR ( q )
     snprintf ( q, sizeof q, "max_retry: %d\n", max_retry );
     SEND_STR ( q )
-    snprintf ( q, sizeof q, "app_state: %s\n", getAppState ( app_state ) );
+    snprintf ( q, sizeof q, "app_state: %s\n", getAppState() );
     SEND_STR ( q )
     snprintf ( q, sizeof q, "PID: %d\n", getpid() );
     SEND_STR ( q )

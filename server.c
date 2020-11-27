@@ -1,4 +1,6 @@
 
+void app_reset();
+
 void sendRawDataToClient (char *data, int tcp_fd,  Mutex *mutex ) {
 	char q[ACP_BUF_MAX_LENGTH];
 	lockMutex(mutex);
@@ -60,7 +62,7 @@ int serveAppCmd(int SERVER_FD, int SERVER_CMD, char *buf){
 			printData ( SERVER_FD );
 	        return 1;
 	    case CMD_GATEWAY_RESET:
-		    app_state = APP_RESET;
+		    app_reset();
 			return 1;
 		default:
 			putsdo("no app command matched\n");

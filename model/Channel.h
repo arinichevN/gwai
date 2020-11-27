@@ -8,21 +8,22 @@
 
 #define CH_SLEEP_BEFORE_READ_SLAVE NANOSLEEP(0,100000000);
 
-typedef struct channel_st{
+typedef struct channel_st Channel;
+struct channel_st {
    int id;
    SlaveIntervalGetCommandList igcmd_list;
    struct sthread_st *thread;
    int max_retry;
    int retry;
-   int (*control)(struct channel_st *, int);
+   int (*control)(Channel *, int);
    Mutex mutex;
-} Channel;
+};
 DEC_LIST(Channel)
 
 typedef struct channelptr_st ChannelPtr;
 struct channelptr_st{
 	Channel *item;
-	struct channelptr_st *next;
+	ChannelPtr *next;
 };
 DEC_LIST(ChannelPtr)
 DEC_LLIST(ChannelPtr)

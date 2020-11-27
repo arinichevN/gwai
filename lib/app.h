@@ -217,8 +217,6 @@ extern int readHostName(char *hostname);
 
 extern int initPid(int *pid_file, int *pid, const char *pid_path);
 
-extern char * getAppState(char state);
-
 extern void freePid(int *pid_file, int *pid, const char *pid_path);
 
 extern int initMutex(Mutex *m);

@@ -7,12 +7,14 @@
 #include "../lib/tsv.h"
 #include "SlaveGetCommand.h"
 
-typedef struct sigc_st{
+typedef struct sigc_st SlaveIntervalGetCommand;
+struct sigc_st{
     SlaveGetCommand command;
     struct timespec interval;
     Ton tmr;
-    int (*control)(struct sigc_st *, int, Mutex *, int);
-} SlaveIntervalGetCommand;
+    int (*control)(SlaveIntervalGetCommand *, int, Mutex *, int);
+};
+
 DEC_LIST(SlaveIntervalGetCommand)
 
 extern void sigc_free(SlaveIntervalGetCommand *item);

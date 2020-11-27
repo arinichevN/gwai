@@ -12,13 +12,14 @@
 #define ST_SLEEP_BEFORE_READ_SLAVE NANOSLEEP(0,100000000);
 
 //SerialThread searches for channels on it's port, adds found channels to it's channel list and polls this channels  
-struct sthread_st{
+typedef struct sthread_st SerialThread;
+struct sthread_st {
 	int id;
 	char serial_path[LINE_SIZE];
 	int serial_rate;
 	int max_retry;
 	int retry;
-	void (*control)(struct sthread_st *);
+	void (*control)(SerialThread *);
 	ChannelPtrList channelptr_list;//links to all available channels, this list is the same for each thread, we use this links in channelptr_llist
 	ChannelPtrLList channelptr_llist;//channels beeing controlled by this thread
 	Mutex rmutex;
@@ -27,9 +28,9 @@ struct sthread_st{
 	pthread_t thread;
 	struct timespec cycle_duration;
 	Mutex mutex;
-	struct sthread_st *next;
+	SerialThread *next;
 };
-typedef struct sthread_st SerialThread;
+
 DEC_LLIST(SerialThread)
 
 extern void stList_free ( SerialThreadLList *list ) ;

@@ -46,18 +46,6 @@
 
 #define SRV_SLEEP_BEFORE_READ_SLAVE NANOSLEEP(0,100000000);
 
-//#define CONFIG_DELIMITER_COLUMN '*'
-
-
-//#define WAIT_RESP_TIMEOUT 1
-//#define MAX_RETRY 3
-//#define SLAVE_CMD_MAX_LENGTH ACP_CMD_MAX_LENGTH
-//#define SLAVE_CMD_MAX_SIZE (SLAVE_CMD_MAX_LENGTH * sizeof(char))
-
-//#define SLEEP_BEFORE_READ_SLAVE NANOSLEEP(0,100000000);
-
-//#define CMD_CHANNEL_EXISTS ACP_CMD_CHANNEL_EXISTS
-
 extern int readSettings();
 
 extern int initData();

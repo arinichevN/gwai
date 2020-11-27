@@ -94,24 +94,6 @@ int initPid ( int *pid_file, int *pid, const char *pid_path ) {
     return 1;
 }
 
-char * getAppState ( char state ) {
-    switch ( state ) {
-    case APP_INIT:
-        return "APP_INIT";
-    case APP_INIT_DATA:
-        return "APP_INIT_DATA";
-    case APP_RUN:
-        return "APP_RUN";
-    case APP_STOP:
-        return "APP_STOP";
-    case APP_RESET:
-        return "APP_RESET";
-    case APP_EXIT:
-        return "APP_EXIT";
-    }
-    return "";
-}
-
 void freePid ( int *pid_file, int *pid, const char *pid_path ) {
     if ( *pid_file != -1 ) {
         close ( *pid_file );
