@@ -280,7 +280,7 @@ void st_RUN(SerialThread *item){
 			printdo("deleting channel id=%d from serial thread id=%d\n", channel->id, item->id);
 		}
 	}
-	putsdo("");
+	//putsdo("");
 }
 
 void st_FIND_CHANNELS(SerialThread *item){

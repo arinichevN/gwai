@@ -9,10 +9,10 @@ fi
 # Required-Stop:     $remote_fs $syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: serial - TCP gateway
+# Short-Description: serial-TCP gateway
 ### END INIT INFO
 
 # Author: Arinichev Nikolay <arinichev_n@mail.ru>
 
 DESC="serial - TCP gateway"
-DAEMON=/usr/sbin/gwai
+DAEMON=/usr/sbin/gwst
