@@ -3,7 +3,7 @@
 /*.autosave
 /*_dbg
 /*.kdev4
-/*.o
-/lib/*.o
+*.o
+*.a
 /srl
 /gwst*

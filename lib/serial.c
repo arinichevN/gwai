@@ -2,11 +2,11 @@
 #include "serial.h"
 
 int serial_init(int *fd, const char *device, const int baud, const char *config) {
-    *fd = serial_open(device, baud, config);
-    if (*fd < 0) {
-        return 0;
-    }
-    return 1;
+	*fd = serial_open(device, baud, config);
+	if (*fd < 0) {
+		return 0;
+	}
+	return 1;
 }
 
 static speed_t baudIntToInternal(const int baud){
@@ -130,6 +130,37 @@ static int checkStopBits(const char sb){
     return 0;
 }
 
+int serial_checkBaud(int baud){
+	speed_t ibaud = baudIntToInternal(baud);
+    if(ibaud < 0){
+		putsde("bad baud");
+		return 0;
+	}
+	return 1;
+}
+
+int serial_checkConfig(const char *config){
+	char b, p, sb;
+	int n = sscanf(config, "%c%c%c", &b, &p, &sb );
+	if(n!= 3){
+		putsde("bad config string");
+		return 0;
+	}
+	if(!checkDataBits(b)){
+		printde("bad data bits: found %hhd, but expected one of 5,6,7,8)", b);
+		return 0;
+	}
+	if(!checkParity(p)){
+		printde("bad parity: found %hhd, but expected one of N, O, E, n, o, e)", p);
+		return 0;
+	}
+	if(!checkStopBits(sb)){
+		printde("bad stop bits: found %hhd, but expected one of 1, 2)", sb);
+		return 0;
+	}
+	return 1;
+}
+
 int serial_open(const char *device, const int baud, const char *config) {
     speed_t _baud;
     int status, fd;
@@ -161,9 +192,7 @@ int serial_open(const char *device, const int baud, const char *config) {
         perrord("open()");
         return -1;
     }
-
     fcntl(fd, F_SETFL, O_RDWR);
-
 	struct termios options;
     if(tcgetattr(fd, &options) != 0){
 		close(fd);
@@ -321,6 +350,16 @@ int serial_canRead(int fd, int timeout_ms){
 	}
 	putsde ("not POLLIN\n");
 	return 0;
+}
+
+int serial_alive(int fd) {
+	struct stat stb;
+	fstat(fd, &stb);
+	if(stb.st_nlink <= 0){
+		putsde("file not found\n");
+		return 0;
+	}
+	return 1;
 }
 
 int serial_canWrite(int fd, int timeout_ms){

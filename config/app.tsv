@@ -1,9 +1,3 @@
-id		value
-port		49188
-cd_s		0
-cd_ns		700000000
-conn_num_max	15
-max_retry	3
-serial_pattern	ttyUSB1
-serial_rate	9600
-serial_config	8n1
+id					value
+port				49188
+tcp_conn_num_max	15

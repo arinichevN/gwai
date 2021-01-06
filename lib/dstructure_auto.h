@@ -1,6 +1,8 @@
 #ifndef LIBPAS_DSTRUCTURE_AUTO_H
 #define LIBPAS_DSTRUCTURE_AUTO_H
 
+#include <stdlib.h>
+
 #define LIST_ITEM_SIZE sizeof (*(list)->item)
 
 #define DEC_PLIST(T) typedef struct {T **item; size_t length;size_t max_length;} T##PList;
@@ -31,8 +33,10 @@
 
 
 #define DEC_LLIST(T) typedef struct {T *top; T *last; size_t length;} T##LList;
+#define DEC_LLISTM(T) typedef struct {T *top; T *last; size_t length; Mutex mutex;} T##LListm;
 #define LIST_INITIALIZER {.item = NULL, .length = 0, .max_length = 0}
 #define LLIST_INITIALIZER {.top = NULL, .last = NULL, .length = 0}
+#define LLISTM_INITIALIZER {.top = NULL, .last = NULL, .length = 0, .mutex = MUTEX_INITIALIZER}
 #define LLIST_RESET(list) (list)->top = NULL; (list)->last = NULL; (list)->length = 0;
 //#define LLIST_GETBYID(DEST,LIST,ID)(DEST) = (LIST)->top;while((DEST)!=NULL){if((DEST)->id==ID){break;}(DEST)=(DEST)->next;}
 #define LLIST_GETBYID(DEST,LIST,ID)for((DEST) = (LIST)->top;(DEST)!=NULL;(DEST)=(DEST)->next)if((DEST)->id==ID)break;
@@ -52,8 +56,14 @@
 #define DEC_FUN_FIFO_POP(T) extern int T ## _fifo_pop(T * item, FIFOItemList_ ## T *list);
 #define FIFO_INIT(list, count) (list)->item = malloc(LIST_ITEM_SIZE * count);if ((list)->item == NULL) {(list)->length = 0;}(list)->length = count;for (size_t i = 0; i < (list)->length; i++){if (i == ((list)->length-1)) {(list)->item[i].next = &(list)->item[0];} else {(list)->item[i].next = &(list)->item[i + 1];} if (i == 0) {(list)->item[i].prev = &(list)->item[(list)->length-1];} else {(list)->item[i].prev = &(list)->item[i - 1];} (list)->item[i].free = 1; } (list)->pop_item = NULL; (list)->push_item = &(list)->item[0]; if(!initMutex(&(list)->mutex)){FREE_FIFO(list)}
 
-#define FUN_PIPE_POP(T) T pipe_pop(T ## List *list) {return list->item[list->length-1];}
-#define FUN_PIPE_PUSH(T) void pipe_push(T ## List *list, T value) {for (int i = list->length - 1; i > 0; i--) {list->item[i] = list->item[i - 1];}list->item[0] = value;}
+#define DEC_PIPE(TIN, TPIPE)		typedef struct {TIN *item; size_t length;} TPIPE;
+#define PIPE_BEGIN(PIPE, LENGTH)	(PIPE)->item = NULL; (PIPE)->length = 0; if(LENGTH>0){(PIPE)->item = calloc(LENGTH, sizeof (*(PIPE)->item));if ((PIPE)->item != NULL)(PIPE)->length=LENGTH;}
+#define PIPE_IN(PIPE, VALUE)		(PIPE)->item[0] = VALUE;
+#define PIPE_OUT(PIPE)				(PIPE)->item[(PIPE)->length - 1]
+#define PIPE_MOVE(PIPE, SUB)		for (size_t i=(PIPE)->length - 1; i > 0; i--) {(PIPE)->item[i] = (PIPE)->item[i - 1];}	(PIPE)->item[0] = SUB;
+#define PIPE_PRINT(PIPE, FORMAT)	for(size_t i=0; i<(PIPE)->length; i++) {printf(FORMAT, (PIPE)->item[i]);}	puts("");
+#define PIPE_FILL(PIPE, VALUE)		for(size_t i=0; i<(PIPE)->length; i++) {(PIPE)->item[i]=VALUE;}
+#define PIPE_FREE(PIPE)				free((PIPE)->item); (PIPE)->item = NULL; (PIPE)->length = 0;
 
 //round list. we will push first to free place, if no free place, we will update oldest items
 #define DEC_RLIST(T) typedef struct {T *item;size_t next_ind;size_t length;} T ## RList;

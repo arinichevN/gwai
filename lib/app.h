@@ -24,6 +24,7 @@
 #include <stdint.h>
 
 #include "common.h"
+#include "dstructure.h"
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
@@ -31,6 +32,7 @@
 #define CONTROL(ITEM) (ITEM)->control(ITEM)
 #define CONTROL_N(ITEM) ITEM.control(&(ITEM))
 
+#define UNKNOWN_STR "?"
 #define GOOD_FLOAT 1.0
 #define BAD_FLOAT 0.0
 #define GOOD_INT 1
@@ -74,7 +76,7 @@
 #define FFORLISTPL(L, I, J)  for (size_t I = 0; I < (L)->length; I++){for (size_t J = I + 1; J < (L)->length; J++)
 #define FFORLISTNL(L, I, J)  for (size_t I = 0; I < (L).length; I++){for (size_t J = I + 1; J < (L).length; J++)
 
-#define FOREACH_CHANNEL FOREACH_LLIST(item,&channel_list,Channel)
+#define FOREACH_CHANNEL FOREACH_LLIST(channel,&channels,Channel)
 
 #define LI(L,I) (L)->item[I]
 #define LIi LI(list,i)
@@ -151,6 +153,64 @@ typedef enum {
 } ProgState;
 
 
+typedef int I1;
+DEC_LIST(I1)
+
+typedef struct {
+    int p0;
+    int p1;
+} I2;
+
+DEC_LIST(I2)
+
+typedef struct {
+    int p0;
+    int p1;
+    int p2;
+} I3;
+DEC_LIST(I3)
+
+typedef double F1;
+DEC_LIST(F1)
+
+typedef double D1;
+DEC_LIST(D1)
+
+typedef struct {
+    int p0;
+    double p1;
+} I1F1;
+
+DEC_LIST(I1F1)
+
+typedef struct {
+    int p0;
+    uint32_t p1;
+} I1U321;
+DEC_LIST(I1U321)
+
+typedef char S1;
+
+DEC_LIST(S1)
+
+
+typedef struct {
+    int id;
+    double value;
+    struct timespec tm;
+    int state;
+} FTS;
+
+DEC_LIST(FTS)
+
+typedef struct {
+    int id;
+    int value;
+    struct timespec tm;
+    int state;
+} ITS;
+
+DEC_LIST(ITS)
 
 typedef struct {
     char *buf;
@@ -185,6 +245,8 @@ typedef struct {
 //#define IF_TRYLOCK_MUTEX(P) if(pthread_mutex_trylock(P) != 0)
 //#define UNLOCK_MUTEX(P) pthread_mutex_unlock(P)
 
+typedef pthread_t Thread;
+
 struct channel_ts_st {
     int id;
     void * data;
@@ -199,7 +261,7 @@ struct channel_ts_st {
 };
 
 
-extern char * strcpyma(char **dest, char *src);
+extern char * strcpyma(char **dest, const char *src);
 
 extern void putse(const char *str);
 
@@ -219,21 +281,26 @@ extern int initPid(int *pid_file, int *pid, const char *pid_path);
 
 extern void freePid(int *pid_file, int *pid, const char *pid_path);
 
-extern int initMutex(Mutex *m);
+extern int mutex_init(Mutex *m);
 
-extern void freeMutex(Mutex *m);
+extern void mutex_free(Mutex *m);
 
-extern int lockMutex(Mutex *item);
+extern int mutex_tryLock(Mutex *item);
 
-extern int tryLockMutex(Mutex *item);
+//extern int mutex_lock(Mutex *item);
 
-extern int unlockMutex(Mutex *item);
+//extern int mutex_unlock(Mutex *item);
+
+#define mutex_lock(M) {if (pthread_mutex_lock ( &(M)->self ) != 0 ) putsde("mutex_lock failed\n");}
+#define mutex_unlock(M) {if (pthread_mutex_unlock(&(M)->self) != 0) putsde("mutex_unlock failed\n");}
 
 extern void skipLine(FILE* stream);
 
-extern int createThread(pthread_t *new_thread,void *(*thread_routine) (void *),char *cmd);
+extern int thread_create(Thread *new_thread, void *(*thread_routine) (void *), void * data);
 
-extern int createMThread(pthread_t *new_thread, void *(*thread_routine) (void *), void * data);
+extern void thread_cancelEnable();
+
+extern void thread_cancelDisable();
 
 extern int threadCancelDisable(int *old_state) ;
 

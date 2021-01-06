@@ -6,8 +6,8 @@
 #include <string.h>
 #include "common.h"
 
-#define TSV_DELIMITER_COLUMN '\t'
-#define TSV_DELIMITER_ROW '\n'
+#define TSV_DELIMITER_COLUMN	'\t'
+#define TSV_DELIMITER_ROW		'\n'
 #define TSV_SKIP_LINE(S) while (1) {int x = fgetc(S);if (x == EOF || x == '\n') { break; }    }
 
 typedef struct {
@@ -36,11 +36,11 @@ extern int TSVgeti(TSVresult *r, int row_number, int column_number) ;
 
 extern double TSVgetf(TSVresult *r, int row_number, int column_number) ;
 
-extern char *TSVgetvalueById ( TSVresult *r, const char *id_column_name, const char *value_column_name, const char *id ) ;
+extern char *TSVgetvalueById(TSVresult *r, const char *id_column_name, const char *value_column_name, const char *id);
 
-extern int TSVgetiById ( TSVresult *r, const char *id_column_name, const char *value_column_name, const char *id );
+extern int TSVgetiById(TSVresult *r, const char *id_column_name, const char *value_column_name, const char *id);
 
-extern double TSVgetfById ( TSVresult *r, const char *id_column_name, const char *value_column_name, const char *id ) ;
+extern double TSVgetfById(TSVresult *r, const char *id_column_name, const char *value_column_name, const char *id);
 
 extern int TSVnullreturned(TSVresult *r);
 
