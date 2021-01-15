@@ -1,2 +1,2 @@
 name		rate	config
-ttyUSB1		9600	8n1
+ttyUSB0		9600	8n1

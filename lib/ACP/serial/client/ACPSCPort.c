@@ -31,7 +31,7 @@ static void step_ID_EXISTS(ACPSCPort *self) {
 	char request_str[RQLEN];
 	memset(request_str, 0, sizeof request_str);
 	
-	acpserial_buildPackII(request_str, RQLEN, ACP_SIGN_REQUEST_GET, CMD_GET_ID_EXISTS, self->remote_id);
+	acpserial_buildPackII(request_str, RQLEN, ACP_SIGN_REQUEST_GET, CMD_NOID_GET_EXISTS, self->remote_id);
 	int r = acpserial_send(self->fd, request_str);
 	if(r == ACP_ERROR_DEVICE_DISCONNECTED){
 		goto disconnected;
