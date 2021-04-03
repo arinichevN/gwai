@@ -58,7 +58,7 @@ function build_acp {
 	cd ../TCP && \
 	gcc $1 $3 -c ACPTCP.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
 	cd ../../../ && \
-	ar -crv libpac.a lib/ACP/ACP.o lib/ACP/command/util.o lib/ACP/serial/ACPSerial.o lib/ACP/serial/ACPSerialPortParam.o lib/ACP/TCP/ACPTCP.o
+	ar -cqv libpac.a lib/ACP/ACP.o lib/ACP/command/util.o lib/ACP/serial/ACPSerial.o lib/ACP/serial/ACPSerialPortParam.o lib/ACP/TCP/ACPTCP.o
 }
 function build_acp_serial_client {
 	cd lib/ACP/serial/client && \
@@ -69,7 +69,7 @@ function build_acp_serial_client {
 	gcc $1 $3 -c ACPSCPortLListm.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
 	gcc $1 $3 -c ACPSC.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
 	cd ../../../../ && \
-	ar -crv libpac.a lib/ACP/serial/client/ACPSCID.o lib/ACP/serial/client/ACPSCIDLListm.o lib/ACP/serial/client/ACPSCIDMapper.o lib/ACP/serial/client/ACPSCPort.o lib/ACP/serial/client/ACPSCPortLListm.o lib/ACP/serial/client/ACPSC.o
+	ar -cqv libpac.a lib/ACP/serial/client/ACPSCID.o lib/ACP/serial/client/ACPSCIDLListm.o lib/ACP/serial/client/ACPSCIDMapper.o lib/ACP/serial/client/ACPSCPort.o lib/ACP/serial/client/ACPSCPortLListm.o lib/ACP/serial/client/ACPSC.o
 }
 function build_acp_tcp_server {
 	cd lib/ACP/TCP/server && \
@@ -77,7 +77,7 @@ function build_acp_tcp_server {
 	gcc $1 $3 -c ACPTSConnectionLList.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
 	gcc $1 $3 -c ACPTS.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
 	cd ../../../../ && \
-	ar -crv libpac.a lib/ACP/TCP/server/ACPTSConnection.o  lib/ACP/TCP/server/ACPTSConnectionLList.o lib/ACP/TCP/server/ACPTS.o
+	ar -cqv libpac.a lib/ACP/TCP/server/ACPTSConnection.o  lib/ACP/TCP/server/ACPTSConnectionLList.o lib/ACP/TCP/server/ACPTS.o
 }
 function build_lib {
 	cd lib  && \
@@ -87,7 +87,7 @@ function build_lib {
 	gcc $1 $3 -c serial.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
 	gcc $1 $3 -c tsv.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
 	cd ../   && \
-	ar -crv libpac.a lib/app.o lib/util.o lib/timef.o lib/serial.o lib/tsv.o
+	ar -cqv libpac.a lib/app.o lib/util.o lib/timef.o lib/serial.o lib/tsv.o
 }
 
 function build_model {
@@ -103,7 +103,7 @@ function build_model {
 	gcc $1 $3 -c main.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
 	cd ../  && \
 	cd ../   && \
-	ar -crv libpac.a model/Channel/main.o model/Channel/list.o model/SlaveGetCommand/main.o model/SlaveIntervalGetCommand/main.o
+	ar -cqv libpac.a model/Channel/main.o model/Channel/list.o model/SlaveGetCommand/main.o model/SlaveIntervalGetCommand/main.o
 }
 
 function build_app {
@@ -112,13 +112,14 @@ function build_app {
 	gcc $1 $3 -c print.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
 	gcc $1 $3 -c tcp_server.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
 	cd ../   && \
-	ar -crv libpac.a app/main.o app/print.o app/tcp_server.o
+	ar -cqv libpac.a app/main.o app/print.o app/tcp_server.o
 }
 
 #1				2
 #debug_mode		bin_name
 function build {
 	#find . -maxdepth 16 -name '*.o' -type f -delete
+	rm -f libpac.a
 	build_lib $1 $2 $3 && \
 	build_acp $1 $2 $3 && \
 	build_acp_serial_client $1 $2 $3 && \
