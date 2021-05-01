@@ -14,9 +14,9 @@ void (*app_control)() = step_INIT;
 int sock_port = -1;
 int tcp_conn_num = 0;
 
-ACPTS *tcp_server = NULL;
-ACPSC *serial_client = NULL;
-ChannelList channels = LIST_INITIALIZER;
+Acpts *tcp_server = NULL;
+Acpsc *serial_client = NULL;
+NoidList noids = LIST_INITIALIZER;
 
 void app_begin() {
 #ifndef MODE_DEBUG
@@ -74,8 +74,8 @@ int app_beginSerialPorts(const char *config_path){
 	return 1;
 }
 
-int app_beginChannels(const char *config_path, const char *get_dir, const char *iget_dir, const char *file_type){
-	ChannelList *list = &channels;
+int app_beginNoids(const char *config_path, const char *get_dir, const char *iget_dir, const char *file_type){
+	NoidList *list = &noids;
 	RESET_LIST(list)
 	TSVresult *r = NULL;
 	if(!TSVinit(&r, config_path)) {
@@ -91,7 +91,7 @@ int app_beginChannels(const char *config_path, const char *get_dir, const char *
 	ALLOC_LIST(list, n)
 	if(list->max_length != n){
 		TSVclear(r);
-		putsde("failed to allocate memory for channel list\n");
+		putsde("failed to allocate memory for noid list\n");
 		return 0;
 	}
 	for(int i = 0; i < LML; i++){
@@ -103,7 +103,7 @@ int app_beginChannels(const char *config_path, const char *get_dir, const char *
 		if(TSVnullreturned(r)) {
 			break;
 		}
-		if(!channel_setParam(&LIi, id, iget_file, iget_dir, file_type)){
+		if(!noid_setParam(&LIi, id, iget_file, iget_dir, file_type)){
 			TSVclear(r);
 			goto failed;
 		}
@@ -119,13 +119,13 @@ int app_beginChannels(const char *config_path, const char *get_dir, const char *
 		goto failed;
 	}
 	FORLi{
-		if(!channel_begin(&LIi)) {
+		if(!noid_begin(&LIi)) {
 			goto failed;
 		}
 	}
 	return 1;
 	failed:
-	channelList_free(list);
+	noidList_free(list);
 	return 0;
 }
 
@@ -148,15 +148,15 @@ int app_init() {
 		putsde ("failed to initialize serial ports\n");
 		return 0;
 	}
-	if(!app_beginChannels(CHANNELS_CONFIG_FILE, CHANNELS_GET_DIR, CHANNELS_IGET_DIR, CONF_FILE_TYPE)){
-		putsde ("failed to initialize channels\n");
+	if(!app_beginNoids(NOIDS_CONFIG_FILE, NOIDS_GET_DIR, NOIDS_IGET_DIR, CONF_FILE_TYPE)){
+		putsde ("failed to initialize noids\n");
 		return 0;
 	}
 	return 1;
 }
 
 void app_free() {
-	channelList_free(&channels);
+	noidList_free(&noids);
 	acpts_free(tcp_server);
 	tcp_server = NULL;
 	acpsc_free(serial_client);

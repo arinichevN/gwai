@@ -4,11 +4,11 @@
 #include "../lib/debug.h"
 #include "../lib/app.h"
 
-#include "../lib/ACP/TCP/ACPTCP.h"
-#include "../lib/ACP/TCP/server/ACPTS.h"
-#include "../lib/ACP/serial/client/ACPSC.h"
+#include "../lib/acp/tcp/main.h"
+#include "../lib/acp/tcp/server/main.h"
+#include "../lib/acp/serial/client/main.h"
 
-#include "../model/Channel/list.h"
+#include "../model/noid/list.h"
 #include "common.h"
 
 extern void app_print(int fd);

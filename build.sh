@@ -47,37 +47,36 @@ function conf_autostart {
 }
 #clear && clear &&  gcc -DMODE_DEBUG -c main.c -D_REENTRANT -Wall -pedantic -g
 function build_acp {
-	cd lib/ACP && \
-	gcc $1 $3 -c ACP.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
+	cd lib/acp && \
+	gcc $1 $3 -c main.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
 	cd command && \
 	gcc $1 $3 -c util.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
 	cd ../ && \
 	cd serial && \
-	gcc $1 $3 -c ACPSerial.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
-	gcc $1 $3 -c ACPSerialPortParam.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
-	cd ../TCP && \
-	gcc $1 $3 -c ACPTCP.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
+	gcc $1 $3 -c main.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
+	gcc $1 $3 -c port_param.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
+	cd ../tcp && \
+	gcc $1 $3 -c main.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
 	cd ../../../ && \
-	ar -cqv libpac.a lib/ACP/ACP.o lib/ACP/command/util.o lib/ACP/serial/ACPSerial.o lib/ACP/serial/ACPSerialPortParam.o lib/ACP/TCP/ACPTCP.o
+	ar -cqv libpac.a lib/acp/main.o lib/acp/command/util.o lib/acp/serial/main.o lib/acp/serial/port_param.o lib/acp/tcp/main.o
 }
 function build_acp_serial_client {
-	cd lib/ACP/serial/client && \
-	gcc $1 $3 -c ACPSCID.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
-	gcc $1 $3 -c ACPSCIDLListm.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
-	gcc $1 $3 -c ACPSCIDMapper.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
-	gcc $1 $3 -c ACPSCPort.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
-	gcc $1 $3 -c ACPSCPortLListm.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
-	gcc $1 $3 -c ACPSC.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
+	cd lib/acp/serial/client && \
+	gcc $1 $3 -c id.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
+	gcc $1 $3 -c id_list.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
+	gcc $1 $3 -c port.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
+	gcc $1 $3 -c port_list.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
+	gcc $1 $3 -c main.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
 	cd ../../../../ && \
-	ar -cqv libpac.a lib/ACP/serial/client/ACPSCID.o lib/ACP/serial/client/ACPSCIDLListm.o lib/ACP/serial/client/ACPSCIDMapper.o lib/ACP/serial/client/ACPSCPort.o lib/ACP/serial/client/ACPSCPortLListm.o lib/ACP/serial/client/ACPSC.o
+	ar -cqv libpac.a lib/acp/serial/client/id.o lib/acp/serial/client/id_list.o lib/acp/serial/client/port.o lib/acp/serial/client/port_list.o lib/acp/serial/client/main.o
 }
 function build_acp_tcp_server {
-	cd lib/ACP/TCP/server && \
-	gcc $1 $3 -c ACPTSConnection.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
-	gcc $1 $3 -c ACPTSConnectionLList.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
-	gcc $1 $3 -c ACPTS.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
+	cd lib/acp/tcp/server && \
+	gcc $1 $3 -c connection.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
+	gcc $1 $3 -c connection_list.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
+	gcc $1 $3 -c main.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
 	cd ../../../../ && \
-	ar -cqv libpac.a lib/ACP/TCP/server/ACPTSConnection.o  lib/ACP/TCP/server/ACPTSConnectionLList.o lib/ACP/TCP/server/ACPTS.o
+	ar -cqv libpac.a lib/acp/tcp/server/connection.o  lib/acp/tcp/server/connection_list.o lib/acp/tcp/server/main.o
 }
 function build_lib {
 	cd lib  && \
@@ -92,18 +91,15 @@ function build_lib {
 
 function build_model {
 	cd model  && \
-	cd Channel
+	cd noid
 	gcc $1 $3 -c main.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
 	gcc $1 $3 -c list.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
-	cd ../  && \
-	cd SlaveGetCommand  && \
+	cd command/get  && \
 	gcc $1 $3 -c main.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
-	cd ../  && \
-	cd SlaveIntervalGetCommand  && \
+	cd interval  && \
 	gcc $1 $3 -c main.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
-	cd ../  && \
-	cd ../   && \
-	ar -cqv libpac.a model/Channel/main.o model/Channel/list.o model/SlaveGetCommand/main.o model/SlaveIntervalGetCommand/main.o
+	cd ../../../../../  && \
+	ar -cqv libpac.a model/noid/main.o model/noid/list.o model/noid/command/get/main.o model/noid/command/get/interval/main.o
 }
 
 function build_app {

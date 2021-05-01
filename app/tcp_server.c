@@ -1,7 +1,7 @@
 #include "tcp_server.h"
 
-extern ACPSC *serial_client;
-extern ChannelList channels;
+extern Acpsc *serial_client;
+extern NoidList noids;
 
 static void sendRawDataToClient (char *data, int tcp_fd,  Mutex *mutex) {
 	char q[ACP_BUF_MAX_LENGTH];
@@ -42,25 +42,25 @@ static int serveGetCommand(int tcp_fd, const char *serial_request_str) {
 		putsde("failed to get ID\n");
 		return 0;
 	}
-	Channel *channel = NULL;
-	LIST_GETBYID(channel, &channels, id)
-	if(channel != NULL){
+	Noid *noid = NULL;
+	LIST_GETBYID(noid, &noids, id)
+	if(noid != NULL){
 		int command;
 		if (!acp_packGetCellI(serial_request_str, ACP_REQUEST_IND_CMD, &command)) {
 			putsde("failed to get command\n");
 			return 0;
 		}
-		SlaveGetCommand *igcmd = channel_getIntervalGetCmd(channel, command);
+		NoidGetCommand *igcmd = noid_getIntervalGetCmd(noid, command);
 		if(igcmd != NULL){
 			if(igcmd->result == ACP_SUCCESS){
 				sendRawDataToClient(igcmd->data, tcp_fd,  &igcmd->mutex);
-				printdo("iget cmd %d for channel %d data %s\n", command, channel->id, igcmd->data);
+				//printdo("iget cmd %d for noid %d data %s\n", command, noid->id, igcmd->data);
 				return 1;
 			}else{
-				printde("auto get command (%d) for channel id=%d: bad data\n", command, id);
+				printde("auto get command (%d) for noid id=%d: bad data\n", command, id);
 			}
 		}else{
-			printde("auto get command (%d) not found for channel id=%d\n", command, id);
+			//printdo("auto get command (%d) not found for noid id=%d\n", command, id);
 		}
 	}
 	size_t resp_len = ACP_BUF_MAX_LENGTH;

@@ -4,9 +4,9 @@
 #include "../lib/debug.h"
 #include "../lib/app.h"
 #include "../lib/controller.h"
-#include "../lib/ACP/serial/client/ACPSC.h"
-#include "../lib/ACP/TCP/ACPTCP.h"
-#include "../model/Channel/list.h"
+#include "../lib/acp/serial/client/main.h"
+#include "../lib/acp/tcp/main.h"
+#include "../model/noid/list.h"
 #include "common.h"
 #include "print.h"
 
