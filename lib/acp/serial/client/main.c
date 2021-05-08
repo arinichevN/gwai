@@ -20,8 +20,8 @@ Acpsc *acpsc_newBegin(){
 	return self;
 }
 
-int acpsc_createNewPort(Acpsc *self, const char *serial_file_name, int serial_rate, const char *serial_config) {
-	AcpscPort *new_port = acpscp_newBegin(serial_file_name, serial_rate, serial_config, &self->ids);
+int acpsc_createNewPort(Acpsc *self, const char *serial_file_name, int serial_rate, const char *serial_dps) {
+	AcpscPort *new_port = acpscp_newBegin(serial_file_name, serial_rate, serial_dps, &self->ids);
 	if(new_port == NULL) {
 		return 0;
 	}

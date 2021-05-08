@@ -1,16 +1,15 @@
 #ifndef ACP_SERIAL_CLIENT_H
 #define ACP_SERIAL_CLIENT_H
 
-#include "id_list.h"
-#include "port_list.h"
+#include "id/list.h"
+#include "port/list.h"
 
 /*
  * This is parallel client with routing capabilities for ACP protocol over serial port. 
  * You can open as many serial ports as you need and they will work in parallel.
- * You can add many remote IDs, and this object will try to find them on serial ports. And 
+ * You can add many network object IDs, and this object will try to find them on serial ports. And 
  * when you try to send data to remote ID, this object will use the serial port to which
  * remote ID is mapped (routing capabilities).
- * If connection to remote ID is lost, this object will try to find it.
  * If port has been closed by OS, this object will try to open it again.
  */
  
@@ -24,7 +23,7 @@ typedef struct {
 
 extern Acpsc *acpsc_newBegin();
 
-extern int acpsc_createNewPort(Acpsc *self, const char *serial_file_name, int serial_rate, const char *serial_config) ;
+extern int acpsc_createNewPort(Acpsc *self, const char *serial_file_name, int serial_rate, const char *serial_dps) ;
 
 extern int acpsc_addRemoteID(Acpsc *self, int id);
 

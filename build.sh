@@ -62,21 +62,26 @@ function build_acp {
 }
 function build_acp_serial_client {
 	cd lib/acp/serial/client && \
-	gcc $1 $3 -c id.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
-	gcc $1 $3 -c id_list.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
-	gcc $1 $3 -c port.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
-	gcc $1 $3 -c port_list.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
+	cd id && \
+	gcc $1 $3 -c main.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
+	gcc $1 $3 -c list.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
+	cd ../port && \
+	gcc $1 $3 -c main.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
+	gcc $1 $3 -c list.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
+	cd ../ && \
 	gcc $1 $3 -c main.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
 	cd ../../../../ && \
-	ar -cqv libpac.a lib/acp/serial/client/id.o lib/acp/serial/client/id_list.o lib/acp/serial/client/port.o lib/acp/serial/client/port_list.o lib/acp/serial/client/main.o
+	ar -cqv libpac.a lib/acp/serial/client/id/main.o lib/acp/serial/client/id/list.o lib/acp/serial/client/port/main.o lib/acp/serial/client/port/list.o lib/acp/serial/client/main.o
 }
 function build_acp_tcp_server {
 	cd lib/acp/tcp/server && \
-	gcc $1 $3 -c connection.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
-	gcc $1 $3 -c connection_list.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
+	cd connection && \
+	gcc $1 $3 -c main.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
+	gcc $1 $3 -c list.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
+	cd ../
 	gcc $1 $3 -c main.c -D_REENTRANT $DEBUG_PARAM -lpthread  && \
 	cd ../../../../ && \
-	ar -cqv libpac.a lib/acp/tcp/server/connection.o  lib/acp/tcp/server/connection_list.o lib/acp/tcp/server/main.o
+	ar -cqv libpac.a lib/acp/tcp/server/connection/main.o  lib/acp/tcp/server/connection/list.o lib/acp/tcp/server/main.o
 }
 function build_lib {
 	cd lib  && \

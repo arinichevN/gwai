@@ -5,8 +5,7 @@
 #include "../../../dstructure_auto.h"
 #include "../../../app.h"
 #include "../main.h"
-#include "connection.h"
-#include "connection_list.h"
+#include "connection/list.h"
 #include "serve_function.h"
 
 typedef int(*AcptsServeFunction)(int, const char *);

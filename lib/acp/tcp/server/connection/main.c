@@ -1,4 +1,4 @@
-#include "connection.h"
+#include "main.h"
 
 static void step_IDLE(AcptsConnection *self);
 static void step_BUSY(AcptsConnection *self);

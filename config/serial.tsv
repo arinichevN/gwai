@@ -1,3 +1,2 @@
-name		rate	config
-ttyUSB0		9600	8n1
-ttyUSB1		9600	8n1
+name		rate		DPS
+ttyUSB0	9600		8n1

@@ -57,14 +57,14 @@ int app_beginSerialPorts(const char *config_path){
 	for(int i = 0; i < n; i++){
 		char *name = TSVgetvalues(r, i, "name");
 		int rate = TSVgetis(r, i, "rate");
-		char *config = TSVgetvalues(r, i, "config");
+		char *dps = TSVgetvalues(r, i, "DPS");
 		if(TSVnullreturned(r)) {
 			break;
 		}
 		size_t fn = strlen(name) + strlen(OS_DEVICE_DIR) + 2;
 		char path[fn] ;
 		snprintf(path, fn, "%s/%s", OS_DEVICE_DIR, name) ;
-		if(!acpsc_createNewPort(serial_client, path, rate, config)){
+		if(!acpsc_createNewPort(serial_client, path, rate, dps)){
 			printde("failed to create serial_port %s\n", path);
 			TSVclear(r);
 			return 0;

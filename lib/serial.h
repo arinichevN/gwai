@@ -17,12 +17,12 @@
 
 #include "timef.h"
 
-#define SERIAL_CONFIG_STRLEN	3
+#define SERIAL_DPS_STRLEN	3
 
 extern int serial_checkBaud(int baud);
-extern int serial_checkConfig(const char *config);
-extern int serial_open(const char *device, const int baud, const char *config);
-extern int serial_init(int *fd, const char *device, const int baud, const char *config);
+extern int serial_checkDps(const char *v);
+extern int serial_open(const char *device, const int baud, const char *dps);
+extern int serial_init(int *fd, const char *device, const int baud, const char *dps);
 extern void serial_printOptions (const int fd);
 extern int serial_puts(const int fd, char *str);
 extern int serial_canRead(int fd, int timeout_ms);

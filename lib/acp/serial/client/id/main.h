@@ -1,8 +1,8 @@
 #ifndef ACP_SERIAL_CLIENT_ID_H
 #define ACP_SERIAL_CLIENT_ID_H
 
-#include "../../../debug.h"
-#include "../../../app.h"
+#include "../../../../debug.h"
+#include "../../../../app.h"
 
 
 typedef enum {

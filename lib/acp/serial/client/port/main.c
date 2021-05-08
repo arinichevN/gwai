@@ -1,4 +1,4 @@
-#include "port.h"
+#include "main.h"
 
 static void step_RUN(AcpscPort *self);
 static void step_IDLE(AcpscPort *self);
@@ -25,13 +25,13 @@ static void disconnectIDs(AcpscPort *self){
 static void step_TRY_OPEN(AcpscPort *self){
 	thread_cancelDisable();
 	mutex_lock(&self->mutex);
-	if (!serial_init(&self->fd, self->param.filename, self->param.rate, self->param.config)) {
-		printde("failed to open serial: %s %d %s\n", self->param.filename, self->param.rate, self->param.config);
+	if (!serial_init(&self->fd, self->param.filename, self->param.rate, self->param.dps)) {
+		printde("failed to open serial: %s %d %s\n", self->param.filename, self->param.rate, self->param.dps);
 		mutex_unlock(&self->mutex);
 		thread_cancelEnable();
 		return;
 	}
-	printdo("serial opened: %s %d %s\n", self->param.filename, self->param.rate, self->param.config);
+	printdo("serial opened: %s %d %s\n", self->param.filename, self->param.rate, self->param.dps);
 	self->cycle_duration = ACPSCP_CYCLE_DURATION_SEARCH;
 	self->control = step_SEARCH_IDS;
 	mutex_unlock(&self->mutex);
@@ -184,7 +184,7 @@ AcpscPort *acpscp_new() {
 	return self;
 }
 
-AcpscPort *acpscp_newBegin(const char *serial_file_name, int serial_rate, const char *serial_config, AcpscIDLListm *ids){
+AcpscPort *acpscp_newBegin(const char *serial_file_name, int serial_rate, const char *serial_dps, AcpscIDLListm *ids){
 	AcpscPort *self = acpscp_new();
 	if(self == NULL){
 		return NULL;
@@ -195,8 +195,8 @@ AcpscPort *acpscp_newBegin(const char *serial_file_name, int serial_rate, const 
 	ton_setInterval(ACPSCP_WAIT_IDLE_INTERVAL, &self->jump_to_idle_tmr);
 	self->cycle_duration = ACPSCP_CYCLE_DURATION_TRY_OPEN;
 	self->control = step_TRY_OPEN;
-	if(!acpspParam_set(&self->param, serial_file_name, serial_rate, serial_config)){
-		printde("bad serial param:%s %s at rate %d\n", serial_file_name, serial_config, serial_rate);
+	if(!acpspParam_set(&self->param, serial_file_name, serial_rate, serial_dps)){
+		printde("bad serial param:%s %s at rate %d\n", serial_file_name, serial_dps, serial_rate);
 		free(self);
 		return NULL;
 	}

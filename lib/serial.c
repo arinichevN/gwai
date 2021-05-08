@@ -1,8 +1,8 @@
 
 #include "serial.h"
 
-int serial_init(int *fd, const char *device, const int baud, const char *config) {
-	*fd = serial_open(device, baud, config);
+int serial_init(int *fd, const char *device, const int baud, const char *dps) {
+	*fd = serial_open(device, baud, dps);
 	if (*fd < 0) {
 		return 0;
 	}
@@ -139,11 +139,11 @@ int serial_checkBaud(int baud){
 	return 1;
 }
 
-int serial_checkConfig(const char *config){
+int serial_checkDps(const char *v){
 	char b, p, sb;
-	int n = sscanf(config, "%c%c%c", &b, &p, &sb );
+	int n = sscanf(v, "%c%c%c", &b, &p, &sb );
 	if(n!= 3){
-		putsde("bad config string");
+		putsde("bad DPS string");
 		return 0;
 	}
 	if(!checkDataBits(b)){
@@ -161,7 +161,7 @@ int serial_checkConfig(const char *config){
 	return 1;
 }
 
-int serial_open(const char *device, const int baud, const char *config) {
+int serial_open(const char *device, const int baud, const char *dps) {
     speed_t _baud;
     int status, fd;
 	_baud = baudIntToInternal(baud);
@@ -170,9 +170,9 @@ int serial_open(const char *device, const int baud, const char *config) {
 		return -1;
 	}
 	char b, p, sb;
-	int n = sscanf(config, "%c%c%c", &b, &p, &sb );
+	int n = sscanf(dps, "%c%c%c", &b, &p, &sb );
 	if(n!= 3){
-		putsde("bad config string");
+		putsde("bad DPS string");
 		return -1;
 	}
 	if(!checkDataBits(b)){

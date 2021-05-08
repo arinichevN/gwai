@@ -26,13 +26,13 @@ void app_print(int fd){
 	SEND_STR("+----------------------------------------------------+\n")
 	SEND_STR("|              serial client ports                   |\n")
 	SEND_STR("+--------------+-------------+-----------+-----------+\n")
-	SEND_STR("|      ptr     |  filename   |   config  |    rate   |\n")
+	SEND_STR("|      ptr     |  filename   |    DPS    |    rate   |\n")
 	SEND_STR("+--------------+-------------+-----------+-----------+\n")
 	FOREACH_LLIST(item, &serial_client->ports, AcpscPort) {
 		snprintf(q, sizeof q, "|%14p|%13s|%11s|%11d|\n",
 				   (void *)item,
 				   item->param.filename,
-				   item->param.config,
+				   item->param.dps,
 				   item->param.rate
 				);
 		SEND_STR(q)

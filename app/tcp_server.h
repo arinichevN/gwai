@@ -4,6 +4,7 @@
 #include "../lib/debug.h"
 #include "../lib/app.h"
 #include "../lib/controller.h"
+#include "../lib/noid.h"
 #include "../lib/acp/serial/client/main.h"
 #include "../lib/acp/tcp/main.h"
 #include "../model/noid/list.h"

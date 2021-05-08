@@ -33,14 +33,14 @@
 
 #define ACP_SIGN_REQUEST_GET					'?' //response required
 #define ACP_SIGN_REQUEST_SET					'&' //no response required 
-#define ACP_SIGN_REQUEST_GET_BROADCAST			'*' //for everyone in the net, response required
-#define ACP_SIGN_REQUEST_SET_BROADCAST			'#' //for everyone in the net, no response required
+//#define ACP_SIGN_REQUEST_GET_BROADCAST			'*' //for everyone in the net, response required
+//#define ACP_SIGN_REQUEST_SET_BROADCAST			'#' //for everyone in the net, no response required
 #define ACP_SIGN_RESPONSE						'!' //response to request
 
 #define ACP_SIGN_REQUEST_GET_STR				"?"
 #define ACP_SIGN_REQUEST_SET_STR				"&"
-#define ACP_SIGN_REQUEST_GET_BROADCAST_STR		"*"
-#define ACP_SIGN_REQUEST_SET_BROADCAST_STR		"#"
+//#define ACP_SIGN_REQUEST_GET_BROADCAST_STR		"*"
+//#define ACP_SIGN_REQUEST_SET_BROADCAST_STR		"#"
 #define ACP_SIGN_RESPONSE_STR					"!"
 
 #define ACP_EMPTY_PACK_STR						ACP_DELIMITER_START_STR ACP_DELIMITER_END_STR

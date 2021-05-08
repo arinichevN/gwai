@@ -36,12 +36,7 @@ static int serveAppCommand(int tcp_fd, const char *serial_request_str, char sign
 	return 0;
 }
 
-static int serveGetCommand(int tcp_fd, const char *serial_request_str) {
-	int id;
-	if (!acp_packGetCellI(serial_request_str, ACP_REQUEST_IND_ID, &id)) {
-		putsde("failed to get ID\n");
-		return 0;
-	}
+static int serveGetCommand(int tcp_fd, const char *serial_request_str, int id) {
 	Noid *noid = NULL;
 	LIST_GETBYID(noid, &noids, id)
 	if(noid != NULL){
@@ -74,12 +69,7 @@ static int serveGetCommand(int tcp_fd, const char *serial_request_str) {
 	return 1;
 }
 
-static int serveSetCommand(int tcp_fd, const char *serial_request_str) {
-	int id;
-	if (!acp_packGetCellI(serial_request_str, ACP_REQUEST_IND_ID, &id)) {
-		putsde("failed to get ID\n");
-		return 0;
-	}
+static int serveSetCommand(int tcp_fd, const char *serial_request_str, int id) {
 	if(acpsc_sendRequestToRemoteID(serial_client, id, serial_request_str) != ACP_SUCCESS){
 		return 0;
 	}
@@ -114,15 +104,22 @@ int serveTCPRequest(int tcp_fd, const char *tcp_request_str){
 	if(serveAppCommand(tcp_fd, serial_request_str, sign)){
 		return 1;
 	}
+	int id;
+	if(!acp_packGetCellI (serial_request_str, NOID_ACP_REQUEST_IND_ID, &id)){
+		putsde("failed to get network object id\n");
+		return 0;
+	}
 	switch(sign){
 		case ACP_SIGN_REQUEST_GET:
-			return serveGetCommand(tcp_fd, serial_request_str);
+			if(id == NOID_ID_BROADCAST){
+				return serveBroadcastGetCommand(tcp_fd, serial_request_str);
+			}
+			return serveGetCommand(tcp_fd, serial_request_str, id);
 		case ACP_SIGN_REQUEST_SET:
-			return serveSetCommand(tcp_fd, serial_request_str);
-		case ACP_SIGN_REQUEST_SET_BROADCAST:
-			return serveBroadcastSetCommand(tcp_fd, serial_request_str);
-		case ACP_SIGN_REQUEST_GET_BROADCAST:
-			return serveBroadcastGetCommand(tcp_fd, serial_request_str);
+			if(id == NOID_ID_BROADCAST){
+				return serveBroadcastSetCommand(tcp_fd, serial_request_str);
+			}
+			return serveSetCommand(tcp_fd, serial_request_str, id);
 		default:
 			putsde("bad sign\n");
 			return 0;
