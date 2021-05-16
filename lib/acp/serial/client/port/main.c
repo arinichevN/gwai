@@ -23,19 +23,19 @@ static void disconnectIDs(AcpscPort *self){
 }
 
 static void step_TRY_OPEN(AcpscPort *self){
-	thread_cancelDisable();
+	//thread_cancelDisable();
 	mutex_lock(&self->mutex);
 	if (!serial_init(&self->fd, self->param.filename, self->param.rate, self->param.dps)) {
 		printde("failed to open serial: %s %d %s\n", self->param.filename, self->param.rate, self->param.dps);
 		mutex_unlock(&self->mutex);
-		thread_cancelEnable();
+		//thread_cancelEnable();
 		return;
 	}
 	printdo("serial opened: %s %d %s\n", self->param.filename, self->param.rate, self->param.dps);
 	self->cycle_duration = ACPSCP_CYCLE_DURATION_SEARCH;
 	self->control = step_SEARCH_IDS;
 	mutex_unlock(&self->mutex);
-	thread_cancelEnable();
+	//thread_cancelEnable();
 }
 
 #define RQLEN 40
@@ -49,7 +49,7 @@ static void step_SEARCH_IDS(AcpscPort *self){
 		if(!need_search){
 			continue;
 		}
-		thread_cancelDisable();
+		//thread_cancelDisable();
 		mutex_lock(&self->mutex);
 		int remote_id = id->value;
 		char request_str[RQLEN];
@@ -94,21 +94,21 @@ static void step_SEARCH_IDS(AcpscPort *self){
 		}
 		acpscid_unlock(id);
 		mutex_unlock(&self->mutex);
-		thread_cancelEnable();
+		//thread_cancelEnable();
 		NANOSLEEP(0, 100000);
 		continue;
 		failed:
 		printdo("id %d not found on %s\n", remote_id, self->param.filename);
 		ids_not_found_count++;
 		mutex_unlock(&self->mutex);
-		thread_cancelEnable();
+		//thread_cancelEnable();
 		NANOSLEEP(0, 100000);
 		continue;
 		disconnected:
 		disconnectIDs(self);
 		gotoOpen(self);
 		mutex_unlock(&self->mutex);
-		thread_cancelEnable();
+		//thread_cancelEnable();
 		return;
 	}
 	if(ids_not_found_count == 0){
@@ -139,13 +139,13 @@ static void step_RUN(AcpscPort *self){
 }
 
 static void step_IDLE(AcpscPort *self){
-	thread_cancelDisable();
+	//thread_cancelDisable();
 	mutex_lock(&self->mutex);
 	if(!serial_alive(self->fd)){
 		gotoOpen(self);
 	};
 	mutex_unlock(&self->mutex);
-	thread_cancelEnable();
+	//thread_cancelEnable();
 }
 
 
@@ -212,12 +212,15 @@ AcpscPort *acpscp_newBegin(const char *serial_file_name, int serial_rate, const 
 	return self;
 }
 
-void acpscp_free(AcpscPort *self) {
+void acpscp_terminate(AcpscPort *self){
 	mutex_lock(&self->mutex);
 	STOP_THREAD(self->thread)
+	mutex_unlock(&self->mutex);
+}
+
+void acpscp_free(AcpscPort *self) {
 	close(self->fd);
 	acpspParam_free(&self->param);
-	mutex_unlock(&self->mutex);
 	mutex_free(&self->mutex);
 	free(self);
 }

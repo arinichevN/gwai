@@ -78,10 +78,10 @@
 
 #define FOREACH_CHANNEL FOREACH_LLIST(channel,&channels,Channel)
 
-#define LI(L,I) (L)->item[I]
+#define LI(L,I) (L)->items[I]
 #define LIi LI(list,i)
 #define LIj LI(list,j)
-#define LIll list->item[list->length]
+#define LIll list->items[list->length]
 #define Lil list->length-1
 #define LL list->length
 #define LML list->max_length
@@ -103,9 +103,9 @@
 #define STOP_ALL_CHANNEL_THREADS(channel_list) STOP_ALL_LLIST_THREADS(channel_list, Channel)
 
 #ifdef MODE_DEBUG
-#define STOP_ALL_LIST_THREADS(list) FORLISTP(list, i){printf("signaling thread %d to cancel...\n", (list)->item[i].id);if (pthread_cancel((list)->item[i].thread) != 0) perror("pthread_cancel()");}FORLISTP(list, i){void * App_result;printf("joining thread %d...\n", (list)->item[i].id);if (pthread_join((list)->item[i].thread, &App_result) != 0) perror("pthread_join()");if (App_result != PTHREAD_CANCELED) printf("thread %d not canceled\n", (list)->item[i].id);}
+#define STOP_ALL_LIST_THREADS(list) FORLISTP(list, i){printf("signaling thread %d to cancel...\n", (list)->items[i].id);if (pthread_cancel((list)->items[i].thread) != 0) perror("pthread_cancel()");}FORLISTP(list, i){void * App_result;printf("joining thread %d...\n", (list)->items[i].id);if (pthread_join((list)->items[i].thread, &App_result) != 0) perror("pthread_join()");if (App_result != PTHREAD_CANCELED) printf("thread %d not canceled\n", (list)->items[i].id);}
 #else
-#define STOP_ALL_LIST_THREADS(list) FORLISTP(list, i){pthread_cancel((list)->item[i].thread);} FORLISTP(list, i){void * result;pthread_join((list)->item[i].thread, &result);}
+#define STOP_ALL_LIST_THREADS(list) FORLISTP(list, i){pthread_cancel((list)->items[i].thread);} FORLISTP(list, i){void * result;pthread_join((list)->items[i].thread, &result);}
 #endif
 
 //#define STOP_THREAD(item) pthread_cancel((item));pthread_join((item), NULL);

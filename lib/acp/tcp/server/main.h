@@ -2,7 +2,7 @@
 #define ACP_TCP_SERVER_H
 
 #include "../../../timef.h"
-#include "../../../dstructure_auto.h"
+#include "../../../dstructure.h"
 #include "../../../app.h"
 #include "../main.h"
 #include "connection/list.h"
@@ -18,8 +18,10 @@ typedef struct {
 	Thread thread;
 } Acpts;
 
-extern void acpts_free(Acpts *self);
 
 extern Acpts *acpts_newBegin(int port, size_t conn_num_max, AcptsServeFunction serve_function);
 
+extern void acpts_terminate(Acpts *self);
+
+extern void acpts_free(Acpts **pself);
 #endif

@@ -12,6 +12,8 @@ extern int acpscpLList_begin(AcpscPortLListm *self);
 
 extern int acpscpLList_add(AcpscPortLListm *self, AcpscPort *item, size_t items_max_count);
 
-extern void acpscpLList_free(AcpscPortLListm *list);
+extern void acpscpLList_terminate(AcpscPortLListm *self);
+
+extern void acpscpLList_free(AcpscPortLListm *self);
 
 #endif 

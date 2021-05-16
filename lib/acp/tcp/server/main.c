@@ -43,14 +43,7 @@ static void *thread_main(void *arg){
 	return NULL;
 }
 
-void acpts_free(Acpts *self){
-	if (self == NULL) return;
-	
-	STOP_THREAD(self->thread)
-	close(self->fd);
-	acptsconnList_free(&self->connections);
-	free(self);
-}
+
 
 Acpts *acpts_newBegin(int port, size_t conn_num_max, AcptsServeFunction serve_function) {
 	if(conn_num_max < 1){
@@ -87,3 +80,18 @@ Acpts *acpts_newBegin(int port, size_t conn_num_max, AcptsServeFunction serve_fu
 	}
 	return self;
 }
+
+void acpts_terminate(Acpts *self){
+	STOP_THREAD(self->thread)
+	acptsconnList_terminate(&self->connections);
+}
+
+void acpts_free(Acpts **pself){
+	Acpts *self = *pself;
+	if (self == NULL) return;
+	close(self->fd);
+	acptsconnList_free(&self->connections);
+	free(self);
+	*pself = NULL;
+}
+

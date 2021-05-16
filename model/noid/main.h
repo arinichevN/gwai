@@ -11,7 +11,7 @@
 typedef struct noid_st Noid;
 struct noid_st {
 	int id;
-	NoidIntervalGetCommandList igcmd_list;
+	NoidIntervalGetCommandList igcommands;
 	struct timespec cycle_duration;
 	int (*control)(Noid *);
 	Mutex mutex;
@@ -23,6 +23,7 @@ extern void noid_resetData(Noid *self);
 extern NoidGetCommand *noid_getIntervalGetCmd(Noid *self, int cmd);
 extern void noid_connectToSerialPort(Noid *self, Mutex *serial_port_mutex, int serial_port_fd);
 extern void noid_start(Noid *self);
+extern void noid_terminate(Noid *self);
 extern void noid_free(Noid *self);
 extern int noid_begin(Noid *self);
 extern int noid_setParam(Noid *self, int id, const char *iget_file, const char *iget_dir, const char *file_type);

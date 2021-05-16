@@ -8,13 +8,11 @@ static int step_FAILURE(NoidIntervalGetCommand *self, int remote_id);
 static int step_INIT(NoidIntervalGetCommand *self, int remote_id);
 
 void nigc_free(NoidIntervalGetCommand *self){
-	mutex_lock(&self->command.mutex);
-	mutex_unlock(&self->command.mutex);
-	mutex_free(&self->command.mutex);
+	ngc_free(&self->command);
 }
 
 int nigcList_init(NoidIntervalGetCommandList *list, const char *dir, const char *file_name, const char *file_type){
-	RESET_LIST(list)
+	LIST_RESET(list)
 	char path[LINE_SIZE];
 	path[0] = '\0';
 	strncat(path, dir, LINE_SIZE - 1);
@@ -32,9 +30,9 @@ int nigcList_init(NoidIntervalGetCommandList *list, const char *dir, const char 
 		putsdo("\tno noid poll commands\n");
 		return 1;
 	}
-	ALLOC_LIST(list,nt);
+	LIST_ALLOC(list,nt);
 	if(list->max_length!=nt){
-		FREE_LIST(list);
+		LIST_FREE(list);
 		TSVclear(db);
 		putsde("\tfailed to allocate memory for noid poll list\n");
 		return 0;
@@ -45,22 +43,29 @@ int nigcList_init(NoidIntervalGetCommandList *list, const char *dir, const char 
 		int ins = TSVgetis(db, i, "interval_ns");
 		char *command_str = TSVgetvalues(db, i, "command");
 		if(TSVnullreturned(db)) {
-			FREE_LIST(list);
+			LIST_FREE(list);
 			TSVclear(db);
 			putsde("\tnull returned while reading noid_poll file 2\n");
 			return 0;
 		}
 		if(is < 0 || ins < 0){
-			FREE_LIST(list);
+			LIST_FREE(list);
 			TSVclear(db);
 			putsde("\tnoid poll file: bad interval\n");
 			return 0;
 		}
 		LIll.interval.tv_sec = is;
 		LIll.interval.tv_nsec = ins;
-		LIll.command.id = acp_commandStrToEnum(command_str);
+		int command_id = acp_commandStrToEnum(command_str);
+		if(command_id == CMD_NONE){
+			LIST_FREE(list);
+			TSVclear(db);
+			putsde("\tnoid poll file: bad command\n");
+			return 0;
+		}
+		LIll.command.id = command_id;
 		if(!mutex_init(&LIll.command.mutex)) {
-			FREE_LIST(list);
+			LIST_FREE(list);
 			TSVclear(db);
 			putsde("\tfailed to initialize noid command data mutex\n");
 			return 0;
@@ -72,6 +77,13 @@ int nigcList_init(NoidIntervalGetCommandList *list, const char *dir, const char 
 	//printf("poll LL=%d\n",LL);
 	TSVclear(db);
 	return 1;
+}
+
+void nigcList_free(NoidIntervalGetCommandList *list){
+	FORLISTP(list, j){
+		nigc_free(&list->items[j]);
+	}
+	LIST_FREE(list);
 }
 
 static void remoteGetRawData(NoidGetCommand *command, int remote_id){

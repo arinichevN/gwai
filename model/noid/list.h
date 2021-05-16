@@ -7,6 +7,8 @@
 
 DEC_LIST(Noid)
 
+extern void noidList_terminate (NoidList *list);
+
 extern void noidList_free (NoidList *list);
 
 #endif 

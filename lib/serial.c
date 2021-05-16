@@ -140,12 +140,12 @@ int serial_checkBaud(int baud){
 }
 
 int serial_checkDps(const char *v){
-	char b, p, sb;
-	int n = sscanf(v, "%c%c%c", &b, &p, &sb );
-	if(n!= 3){
-		putsde("bad DPS string");
+	if(strlen(v) != SERIAL_DPS_STRLEN){
+		printde("bad DPS string: %d characters expected", SERIAL_DPS_STRLEN);
 		return 0;
 	}
+	char b, p, sb;
+	b = v[0]; p = v[1]; sb = v[2];
 	if(!checkDataBits(b)){
 		printde("bad data bits: found %hhd, but expected one of 5,6,7,8)", b);
 		return 0;

@@ -66,9 +66,9 @@ void app_print(int fd){
 	SEND_STR("|     id    |    cmd    |interval_s |interval_ns|    result    |   state   |\n")
 	SEND_STR("+-----------+-----------+-----------+-----------+--------------+-----------+\n")
 	FORLISTN(noids, i){
-		Noid *noid = &noids.item[i];
-		FORLISTN(noid->igcmd_list, j){
-			NoidIntervalGetCommand *item = &noid->igcmd_list.item[j];
+		Noid *noid = &noids.items[i];
+		FORLISTN(noid->igcommands, j){
+			NoidIntervalGetCommand *item = &noid->igcommands.items[j];
 			snprintf(q, sizeof q, "|%11d|%11d|%11ld|%11ld|%14s|%11s|\n",
 						noid->id,
 						item->command.id,

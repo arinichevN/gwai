@@ -5,7 +5,7 @@
 #define ACP_FLOAT_FORMAT_IN "%lf"
 
 
-#include "../dstructure_auto.h"
+#include "../dstructure.h"
 #include "main.h"
 
 

@@ -23,6 +23,7 @@ extern void nigc_free(NoidIntervalGetCommand *self);
 extern void nigc_reset(NoidIntervalGetCommand *self);
 extern int nigc_control(NoidIntervalGetCommand *self, int fd, Mutex *smutex, int remote_id);
 extern int nigcList_init(NoidIntervalGetCommandList *list, const char *dir, const char *file_name, const char *file_type);
+extern void nigcList_free(NoidIntervalGetCommandList *list);
 extern const char *nigc_getStateStr(NoidIntervalGetCommand *self);
 #define nigc_control(self, remote_id) (self)->control(self, remote_id)
 

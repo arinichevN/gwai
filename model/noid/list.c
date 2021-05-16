@@ -1,9 +1,15 @@
 #include "list.h"
 
-void noidList_free (NoidList *list){
+void noidList_terminate(NoidList *list){
+	FORLi{
+		noid_terminate(&LIi);
+	}
+}
+
+void noidList_free(NoidList *list){
 	FORLi{
 		noid_free(&LIi);
 	}
-	FREE_LIST(list);
+	LIST_FREE(list);
 }
 

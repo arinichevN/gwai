@@ -1,9 +1,3 @@
-#include "../dstructure_auto.h"
-#include "../app.h"
-#include "../timef.h"
-
-#include "../util.h"
-
 #include "main.h"
 
 int acp_goodCmdChar (int v) {

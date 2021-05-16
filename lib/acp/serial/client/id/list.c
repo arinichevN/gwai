@@ -28,9 +28,9 @@ int acpscidLList_add(AcpscIDLListm *self, AcpscID *item, size_t items_max_count)
 }
 
 void acpscidLList_free(AcpscIDLListm *self){
-	AcpscID *item = self->top, *temp;
+	AcpscID *item = self->top;
 	while(item != NULL) {
-		temp = item;
+		AcpscID *temp = item;
 		item = item->next;
 		acpscid_free(temp);
 	}

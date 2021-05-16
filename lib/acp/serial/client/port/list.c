@@ -27,10 +27,18 @@ int acpscpLList_add(AcpscPortLListm *self, AcpscPort *item, size_t items_max_cou
 	return 1;
 }
 
-void acpscpLList_free(AcpscPortLListm *self){
-	AcpscPort *item = self->top, *temp;
+void acpscpLList_terminate(AcpscPortLListm *self){
+	AcpscPort *item = self->top;
 	while(item != NULL) {
-		temp = item;
+		acpscp_terminate(item);
+		item = item->next;
+	}
+}
+
+void acpscpLList_free(AcpscPortLListm *self){
+	AcpscPort *item = self->top;
+	while(item != NULL) {
+		AcpscPort *temp = item;
 		item = item->next;
 		acpscp_free(temp);
 	}

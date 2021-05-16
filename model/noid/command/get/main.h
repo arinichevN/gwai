@@ -15,11 +15,8 @@ typedef struct {
 	int result;
 } NoidGetCommand;
 
-DEC_LIST(NoidGetCommand)
-
 extern void ngc_free(NoidGetCommand *item);
 extern void ngc_sendDataToClient (NoidGetCommand *item, int tcp_fd );
 extern void ngc_setData(NoidGetCommand *item, const char *data, size_t data_len, int result);
-extern int ngcList_init(NoidGetCommandList *list, const char *dir, const char *file_name, const char *file_type);
 
 #endif 

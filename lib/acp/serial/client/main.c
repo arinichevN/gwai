@@ -44,11 +44,17 @@ int acpsc_addRemoteID(Acpsc *self, int id) {
 	return 1;
 }
 
-void acpsc_free(Acpsc *self) {
+void acpsc_terminate(Acpsc *self){
+	acpscpLList_terminate(&self->ports);
+}
+
+void acpsc_free(Acpsc **pself) {
+	Acpsc *self = *pself;
 	if (self == NULL) return;
 	acpscpLList_free(&self->ports);
 	acpscidLList_free(&self->ids);
 	free(self);
+	*pself = NULL;
 }
 
 static void disconnectPortIDs(Acpsc *self, AcpscPort *port, AcpscID *locked_id) {

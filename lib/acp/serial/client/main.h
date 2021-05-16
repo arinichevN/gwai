@@ -27,7 +27,9 @@ extern int acpsc_createNewPort(Acpsc *self, const char *serial_file_name, int se
 
 extern int acpsc_addRemoteID(Acpsc *self, int id);
 
-extern void acpsc_free(Acpsc *self);
+extern void acpsc_terminate(Acpsc *self);
+
+extern void acpsc_free(Acpsc **pself);
 
 extern int acpsc_getFromRemoteID(Acpsc *self, int remote_id, const char *request_str, char *response, size_t response_length);
 

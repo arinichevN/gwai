@@ -33,6 +33,7 @@ struct acpscp_st {
 };
 
 extern AcpscPort *acpscp_newBegin(const char *serial_file_name, int serial_rate, const char *serial_dps, AcpscIDLListm *ids);
+extern void acpscp_terminate(AcpscPort *self);
 extern void acpscp_free(AcpscPort *self);
 extern void acpscp_lock(AcpscPort *self);
 extern void acpscp_unlock(AcpscPort *self);

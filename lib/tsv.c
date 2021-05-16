@@ -5,10 +5,11 @@ static int getBufLength ( FILE* stream ) {
     int out = 0;
     while ( 1 ) {
         int c = fgetc ( stream );
+        out++;
         if ( c == EOF ) {
             break;
         }
-        out++;
+       
     }
     return out;
 }
@@ -65,11 +66,12 @@ static void parse ( TSVresult *r, FILE* stream ) {
     int last_char = TSV_DELIMITER_COLUMN;
     while ( 1 ) {
         int c = fgetc ( stream );
-        if ( c == EOF ) {
-            break;
-        }
         if ( i >= r->buf_length ) {
             return;
+        }
+        if ( c == EOF ) {
+			r->buf[i] = '\0';
+            break;
         }
         if ( c == TSV_DELIMITER_ROW || c == TSV_DELIMITER_COLUMN ) {
             r->buf[i] = '\0';

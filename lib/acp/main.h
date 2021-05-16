@@ -2,8 +2,10 @@
 #define ACP_H
 
 #include <netinet/in.h>
-
-#include "../dstructure_auto.h"
+#include "../dstructure.h"
+#include "../app.h"
+#include "../timef.h"
+#include "../util.h"
 
 //#define ACP_CMD_MAX_LENGTH 16
 #define ACP_BUF_MAX_LENGTH						256

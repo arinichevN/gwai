@@ -1,2 +1,2 @@
 command						interval_s		interval_ns
-CMD_GETR_CHANNEL_FTS	1				0
+CMD_NOID_GET_FTS	1				0

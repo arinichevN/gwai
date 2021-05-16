@@ -76,7 +76,7 @@ int app_beginSerialPorts(const char *config_path){
 
 int app_beginNoids(const char *config_path, const char *get_dir, const char *iget_dir, const char *file_type){
 	NoidList *list = &noids;
-	RESET_LIST(list)
+	LIST_RESET(list)
 	TSVresult *r = NULL;
 	if(!TSVinit(&r, config_path)) {
 		TSVclear(r);
@@ -88,14 +88,14 @@ int app_beginNoids(const char *config_path, const char *get_dir, const char *ige
 		putsde("no data rows in file\n");
 		return 0;
 	}
-	ALLOC_LIST(list, n)
+	LIST_ALLOC(list, n)
 	if(list->max_length != n){
 		TSVclear(r);
 		putsde("failed to allocate memory for noid list\n");
 		return 0;
 	}
 	for(int i = 0; i < LML; i++){
-		LIST_RESET(&LIi.igcmd_list)
+		LIST_RESET(&LIi.igcommands)
 	}
 	for(int i = 0; i < LML; i++){
 		int id = TSVgetis(r, i, "id");
@@ -156,11 +156,13 @@ int app_init() {
 }
 
 void app_free() {
+	acpts_terminate(tcp_server);
+	noidList_terminate(&noids);
+	acpsc_terminate(serial_client);
+	
 	noidList_free(&noids);
-	acpts_free(tcp_server);
-	tcp_server = NULL;
-	acpsc_free(serial_client);
-	serial_client = NULL;
+	acpts_free(&tcp_server);
+	acpsc_free(&serial_client);
 }
 
 void app_exit () {

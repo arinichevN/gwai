@@ -7,16 +7,16 @@ static int step_INIT(Noid *self);
 
 void noid_resetData(Noid *self){
 	mutex_lock(&self->mutex);
-	FORLISTN(self->igcmd_list, i){
-		nigc_reset(&self->igcmd_list.item[i]);
+	FORLISTN(self->igcommands, i){
+		nigc_reset(&self->igcommands.items[i]);
 	}
 	self->control = step_INIT;
 	mutex_unlock(&self->mutex);
 }
 
 NoidGetCommand *noid_getIntervalGetCmd(Noid *self, int cmd){
-	FORLISTN(self->igcmd_list, j){
-		NoidGetCommand *command = &self->igcmd_list.item[j].command;
+	FORLISTN(self->igcommands, j){
+		NoidGetCommand *command = &self->igcommands.items[j].command;
 		if(cmd == command->id){
 		   return command;
 		}
@@ -26,13 +26,13 @@ NoidGetCommand *noid_getIntervalGetCmd(Noid *self, int cmd){
 
 
 static int step_RUN(Noid *self){
-	thread_cancelDisable();
+	//thread_cancelDisable();
 	mutex_lock(&self->mutex);
-	FORLISTN(self->igcmd_list, i){
-		nigc_control(&self->igcmd_list.item[i], self->id);
+	FORLISTN(self->igcommands, i){
+		nigc_control(&self->igcommands.items[i], self->id);
 	}
 	mutex_unlock(&self->mutex);
-	thread_cancelEnable();
+	//thread_cancelEnable();
 	return 1;
 }
 
@@ -45,11 +45,11 @@ static int step_FAILURE(Noid *self){
 }
 
 static int step_INIT(Noid *self){
-	thread_cancelDisable();
+	//thread_cancelDisable();
 	mutex_lock(&self->mutex);
 	self->control = step_RUN;
 	mutex_unlock(&self->mutex);
-	thread_cancelEnable();
+	//thread_cancelEnable();
 	return 1;
 }
 
@@ -88,21 +88,23 @@ const char *noid_getStateStr(Noid *self){
 	return "?";
 }
 
-void noid_free(Noid *self){
+void noid_terminate(Noid *self){
 	mutex_lock(&self->mutex);
 	STOP_THREAD(self->thread)
-	FORLISTN(self->igcmd_list, j){
-		nigc_free(&self->igcmd_list.item[j]);
-	}
-	FREE_LIST(&self->igcmd_list);
+	mutex_unlock(&self->mutex);
+}
+
+void noid_free(Noid *self){
+	mutex_lock(&self->mutex);
+	nigcList_free(&self->igcommands);
 	mutex_unlock(&self->mutex);
 	mutex_free(&self->mutex);
 }
 
 int noid_setParam(Noid *self, int id, const char *iget_file, const char *iget_dir, const char *file_type){
-	LIST_RESET(&self->igcmd_list)
+	LIST_RESET(&self->igcommands)
 	self->id = id;
-	if(!nigcList_init(&self->igcmd_list, iget_dir, iget_file, file_type)){
+	if(!nigcList_init(&self->igcommands, iget_dir, iget_file, file_type)){
 		return 0;
 	}
 	return 1;

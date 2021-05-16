@@ -33,7 +33,7 @@ static void step_BUSY(AcptsConnection *self){
 	//printdo("SERVERM_BUSY %zu\n", self->id);
 	//putsdo("\n\n");
 	//printdo("connection is busy %zu\n", self->id);
-	thread_cancelDisable();
+	//thread_cancelDisable();
 	mutex_lock(&self->mutex);
 	int fd = self->fd;
 	while (1){
@@ -46,7 +46,7 @@ static void step_BUSY(AcptsConnection *self){
 		}
 	}
 	connection_stop: close(self->fd); self->control=step_IDLE; mutex_unlock(&self->mutex);
-	thread_cancelEnable();
+	//thread_cancelEnable();
 }
 
 static void *thread_main(void *arg){
@@ -85,10 +85,13 @@ AcptsConnection *acptsconn_new(int id, AcptsServeFunction serve_function){
 	return self;
 }
 
-void acptsconn_free(AcptsConnection *self){
+void acptsconn_terminate(AcptsConnection *self){
 	mutex_lock(&self->mutex);
 	STOP_THREAD(self->thread)
 	mutex_unlock(&self->mutex);
+}
+
+void acptsconn_free(AcptsConnection *self){
 	mutex_free(&self->mutex);
 	free(self);
 }
